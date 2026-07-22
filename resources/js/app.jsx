@@ -1,14 +1,15 @@
-import '../css/app.css';
 import './bootstrap';
 
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+import '../css/app.css';
+
+const appName = import.meta.env.VITE_APP_NAME || 'Bengkel Stelle';
 
 createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
+    title: (title) => title ? `${appName} - ${title}` : `${appName} - Sistem Manajemen Bengkel & Online Booking Servis`,
     resolve: (name) =>
         resolvePageComponent(
             `./Pages/${name}.jsx`,
