@@ -30,4 +30,26 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Get the user's role.
+     */
+    public function getRoleAttribute(): string
+    {
+        if (isset($this->attributes['role'])) {
+            return $this->attributes['role'];
+        }
+
+        $email = $this->email;
+        if (str_contains($email, 'admin')) {
+            return 'admin';
+        }
+        if (str_contains($email, 'mechanic')) {
+            return 'mechanic';
+        }
+        if (str_contains($email, 'owner')) {
+            return 'owner';
+        }
+        return 'customer';
+    }
 }
