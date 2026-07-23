@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Service;
 use App\Http\Requests\StoreServiceRequest;
+use App\Http\Requests\UpdateServiceRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -28,16 +29,9 @@ class AdminServiceController extends Controller
      * Update stock or price of an existing service/sparepart.
      * PATCH /admin/services/{service}
      */
-    public function update(Request $request, Service $service): RedirectResponse
+    public function update(UpdateServiceRequest $request, Service $service): RedirectResponse
     {
-        $request->validate([
-            'stock'       => 'nullable|integer|min:0',
-            'price'       => 'nullable|numeric|min:0',
-            'name'        => 'nullable|string|max:255',
-            'description' => 'nullable|string|max:1000',
-        ]);
-
-        $service->update(array_filter($request->only(['stock', 'price', 'name', 'description']), fn($v) => !is_null($v)));
+        $service->update(array_filter($request->only(['stock', 'price', 'name', 'estimated_minutes', 'description']), fn($v) => !is_null($v)));
 
         return back()->with('success', 'Data item berhasil diperbarui.');
     }
