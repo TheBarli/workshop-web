@@ -1,227 +1,227 @@
-import React, { useState, useEffect } from 'react';
-import { mockApi } from '../../services/mockApi';
+import React, { useState } from 'react';
+import { useForm, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Package, Search, Plus, AlertTriangle, CheckCircle2, Edit2, X } from 'lucide-react';
+import { Package, Search, Plus, AlertTriangle, X } from 'lucide-react';
 
-const SparepartsInventory = () => {
-  const [spareparts, setSpareparts] = useState([]);
-  const [loading, setLoading] = useState(true);
+const SparepartsInventory = ({ inventory = [] }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
 
-  const [newPart, setNewPart] = useState({
-    name: '',
-    category: 'General',
-    stock: 10,
-    min_stock: 5,
-    purchase_price: 50000,
-    selling_price: 75000,
+  const form = useForm({
+    code:              '',
+    name:              '',
+    category:          'sparepart',
+    price:             0,
+    stock:             0,
+    estimated_minutes: 0,
+    description:       '',
   });
 
-  const loadParts = async () => {
-    setLoading(true);
-    try {
-      const data = await mockApi.getSpareparts();
-      setSpareparts(data);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const filteredParts = inventory.filter((p) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      p.name?.toLowerCase().includes(term) ||
+      p.code?.toLowerCase().includes(term)
+    );
+  });
 
-  useEffect(() => {
-    loadParts();
-  }, []);
-
-  const handleStockUpdate = async (id, currentStock) => {
-    const next = prompt('Masukkan jumlah stok fisik baru:', currentStock);
-    if (next !== null && !isNaN(next)) {
-      await mockApi.updateSparepartStock(id, next);
-      loadParts();
-    }
-  };
-
-  const handleAddPart = async (e) => {
+  const handleAddPart = (e) => {
     e.preventDefault();
-    await mockApi.addSparepart(newPart);
-    setModalOpen(false);
-    loadParts();
+    form.post(route('admin.services.store'), {
+      onSuccess: () => { setModalOpen(false); form.reset(); },
+    });
   };
 
-  const filteredParts = spareparts.filter(
-    (p) =>
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.part_code.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleStockUpdate = (id, currentStock) => {
+    const next = prompt('Masukkan jumlah stok fisik baru:', currentStock);
+    if (next !== null && !isNaN(next) && next !== '') {
+      router.patch(route('admin.services.update', id), { stock: Number(next) });
+    }
+  };
 
   return (
     <div className="space-y-6">
-      
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-[#091426]">Manajemen Inventaris & Stock Control</h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Pengelolaan data master suku cadang, penyesuaian stok gudang, & peringatan stok minimum.
-          </p>
+          <h1 className="text-2xl font-extrabold text-[#091426]">Inventaris Suku Cadang</h1>
+          <p className="text-xs text-slate-500 mt-1">Kelola stok dan harga suku cadang bengkel.</p>
         </div>
-
-        <button
-          onClick={() => setModalOpen(true)}
-          className="flex items-center space-x-2 rounded-xl bg-[#eb6905] px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-[#d95d00]"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Tambah Master Part</span>
-        </button>
-      </div>
-
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
-        <input
-          type="text"
-          placeholder="Cari SKU atau nama sparepart..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-2 text-xs font-medium text-slate-900 focus:border-[#eb6905] focus:outline-none"
-        />
+        <div className="flex items-center space-x-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Cari nama atau kode..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:border-[#eb6905] focus:outline-none w-52"
+            />
+          </div>
+          <button
+            onClick={() => { setModalOpen(true); form.reset(); form.clearErrors(); }}
+            className="flex items-center space-x-2 rounded-xl bg-[#eb6905] px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-[#d95d00] transition-colors shrink-0"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Tambah Item</span>
+          </button>
+        </div>
       </div>
 
       {/* Table */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-100 text-slate-700 uppercase font-bold border-b border-slate-200">
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-xs overflow-hidden">
+        <table className="w-full text-xs">
+          <thead className="bg-slate-50 border-b border-slate-200">
+            <tr>
+              <th className="px-4 py-3 text-left font-bold text-slate-700">Kode</th>
+              <th className="px-4 py-3 text-left font-bold text-slate-700">Nama Item</th>
+              <th className="px-4 py-3 text-right font-bold text-slate-700">Harga</th>
+              <th className="px-4 py-3 text-center font-bold text-slate-700">Stok</th>
+              <th className="px-4 py-3 text-center font-bold text-slate-700">Aksi</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {filteredParts.length === 0 ? (
               <tr>
-                <th className="p-3">SKU Part Code</th>
-                <th className="p-3">Nama Sparepart</th>
-                <th className="p-3">Kategori</th>
-                <th className="p-3 text-center">Stok Gudang</th>
-                <th className="p-3">Harga Beli (HPP)</th>
-                <th className="p-3">Harga Jual</th>
-                <th className="p-3 text-right">Aksi Stock Adjustment</th>
+                <td colSpan={5} className="py-10 text-center text-slate-400">
+                  {searchTerm ? 'Tidak ada hasil.' : 'Belum ada item inventaris.'}
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredParts.map((p) => {
-                const isLow = p.stock <= p.min_stock;
-                return (
-                  <tr key={p.id} className="hover:bg-slate-50 font-medium">
-                    <td className="p-3 font-mono font-bold text-slate-900">{p.part_code}</td>
-                    <td className="p-3 font-bold text-slate-900">{p.name}</td>
-                    <td className="p-3">{p.category}</td>
-                    <td className="p-3 text-center">
-                      <span className={`px-3 py-1 rounded-full font-bold text-xs inline-block ${isLow ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
-                        {p.stock}
-                      </span>
-                    </td>
-                    <td className="p-3 text-slate-500">Rp {p.purchase_price.toLocaleString('id-ID')}</td>
-                    <td className="p-3 font-extrabold text-[#eb6905]">Rp {p.selling_price.toLocaleString('id-ID')}</td>
-                    <td className="p-3 text-right">
-                      <button
-                        onClick={() => handleStockUpdate(p.id, p.stock)}
-                        className="rounded-lg bg-slate-100 px-3 py-1.5 font-bold text-slate-700 hover:bg-slate-200"
-                      >
-                        Adjust Stok
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+            ) : (
+              filteredParts.map((part) => (
+                <tr key={part.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-4 py-3 font-mono font-bold text-slate-700">{part.code}</td>
+                  <td className="px-4 py-3 font-semibold text-slate-900">{part.name}</td>
+                  <td className="px-4 py-3 text-right font-bold text-slate-800">
+                    Rp {Number(part.price).toLocaleString('id-ID')}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <span className={`inline-block rounded-full px-2.5 py-0.5 font-bold text-[10px] ${
+                      part.stock <= 5 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'
+                    }`}>
+                      {part.stock} unit
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <button
+                      onClick={() => handleStockUpdate(part.id, part.stock)}
+                      className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                    >
+                      Update Stok
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
-      {/* ADD MASTER PART MODAL */}
+      {/* ADD PART MODAL */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl space-y-6">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl space-y-5">
             <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-              <h3 className="text-base font-bold text-slate-900">Tambah Master Sparepart Baru</h3>
+              <h3 className="text-lg font-bold text-slate-900">Tambah Item Baru</h3>
               <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleAddPart} className="space-y-4 text-xs">
+            <form onSubmit={handleAddPart} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Kode Item *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="SP-001"
+                    value={form.data.code}
+                    onChange={(e) => form.setData('code', e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-xs font-mono font-bold text-slate-900 uppercase focus:border-[#eb6905] focus:outline-none"
+                  />
+                  {form.errors.code && <p className="text-xs text-rose-600 mt-1">{form.errors.code}</p>}
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Kategori</label>
+                  <select
+                    value={form.data.category}
+                    onChange={(e) => form.setData('category', e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-900 focus:border-[#eb6905] focus:outline-none"
+                  >
+                    <option value="sparepart">Suku Cadang</option>
+                    <option value="service">Layanan Servis</option>
+                  </select>
+                </div>
+              </div>
+
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Nama Sparepart</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Nama Item *</label>
                 <input
                   type="text"
                   required
-                  value={newPart.name}
-                  onChange={(e) => setNewPart({ ...newPart, name: e.target.value })}
-                  placeholder="e.g. Kampas Rem Depan Avanza"
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50 p-2.5 font-medium text-slate-900 focus:border-[#eb6905] focus:outline-none"
+                  placeholder="Oli Mesin SAE 10W-40"
+                  value={form.data.name}
+                  onChange={(e) => form.setData('name', e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-900 focus:border-[#eb6905] focus:outline-none"
+                />
+                {form.errors.name && <p className="text-xs text-rose-600 mt-1">{form.errors.name}</p>}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Harga (Rp) *</label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    value={form.data.price}
+                    onChange={(e) => form.setData('price', e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-900 focus:border-[#eb6905] focus:outline-none"
+                  />
+                  {form.errors.price && <p className="text-xs text-rose-600 mt-1">{form.errors.price}</p>}
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Stok Awal *</label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    value={form.data.stock}
+                    onChange={(e) => form.setData('stock', e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-900 focus:border-[#eb6905] focus:outline-none"
+                  />
+                  {form.errors.stock && <p className="text-xs text-rose-600 mt-1">{form.errors.stock}</p>}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Deskripsi</label>
+                <textarea
+                  rows="2"
+                  value={form.data.description}
+                  onChange={(e) => form.setData('description', e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-900 focus:border-[#eb6905] focus:outline-none"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Stok Awal</label>
-                  <input
-                    type="number"
-                    required
-                    value={newPart.stock}
-                    onChange={(e) => setNewPart({ ...newPart, stock: e.target.value })}
-                    className="w-full rounded-xl border border-slate-300 bg-slate-50 p-2.5 font-medium text-slate-900 focus:border-[#eb6905] focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Min Threshold</label>
-                  <input
-                    type="number"
-                    required
-                    value={newPart.min_stock}
-                    onChange={(e) => setNewPart({ ...newPart, min_stock: e.target.value })}
-                    className="w-full rounded-xl border border-slate-300 bg-slate-50 p-2.5 font-medium text-slate-900 focus:border-[#eb6905] focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Harga Beli HPP</label>
-                  <input
-                    type="number"
-                    required
-                    value={newPart.purchase_price}
-                    onChange={(e) => setNewPart({ ...newPart, purchase_price: e.target.value })}
-                    className="w-full rounded-xl border border-slate-300 bg-slate-50 p-2.5 font-medium text-slate-900 focus:border-[#eb6905] focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Harga Jual</label>
-                  <input
-                    type="number"
-                    required
-                    value={newPart.selling_price}
-                    onChange={(e) => setNewPart({ ...newPart, selling_price: e.target.value })}
-                    className="w-full rounded-xl border border-slate-300 bg-slate-50 p-2.5 font-medium text-slate-900 focus:border-[#eb6905] focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setModalOpen(false)}
-                  className="rounded-xl px-4 py-2 font-semibold text-slate-600 hover:bg-slate-100"
-                >
+              <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-200">
+                <button type="button" onClick={() => setModalOpen(false)} className="rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-100">
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-[#eb6905] px-5 py-2 font-bold text-white shadow-md hover:bg-[#d95d00]"
+                  disabled={form.processing}
+                  className="rounded-xl bg-[#eb6905] px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-[#d95d00] disabled:opacity-60"
                 >
-                  Simpan Part
+                  {form.processing ? 'Menyimpan...' : 'Simpan Item'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
     </div>
   );
 };
