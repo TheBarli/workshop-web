@@ -1,18 +1,29 @@
 <?php
 
-
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Api\ApiAuthController;
+use App\Http\Controllers\Api\SanctumApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// Route Public
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+/*
+|--------------------------------------------------------------------------
+| API ROUTES (Sanctum Authenticated)
+|--------------------------------------------------------------------------
+*/
 
-// Route Private (Harus membawa token Sanctum saat diakses)
+// Public Auth API
+Route::post('/login', [ApiAuthController::class, 'login']);
+
+// Protected API Endpoints (Rubric Requirement #7)
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [ApiAuthController::class, 'logout']);
+    
+    // Auth User Profile Check Endpoint
     Route::get('/user', function (Request $request) {
-        return $request->user();
+        return response()->json($request->user());
     });
-    Route::post('/logout', [AuthController::class, 'logout']);
+
+    // Required Rubric Endpoints
+    Route::get('/services', [SanctumApiController::class, 'getServices']);
+    Route::get('/customers', [SanctumApiController::class, 'getCustomers']);
 });
