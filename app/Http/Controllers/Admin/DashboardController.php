@@ -108,34 +108,33 @@ class DashboardController extends Controller
             ->latest()
             ->get();
 
-        // Monthly revenue aggregation for area chart
-        $monthlyChart = Transaction::where('payment_status', 'paid')
-            ->select(
-                DB::raw('YEAR(paid_at) as year'),
-                DB::raw('MONTH(paid_at) as month'),
-                DB::raw('SUM(total_amount) as omzet'),
-                DB::raw('COUNT(*) as bookings')
-            )
-            ->groupBy('year', 'month')
-            ->orderBy('year')->orderBy('month')
-            ->get()
-            ->map(fn($row) => [
-                'month'    => \Carbon\Carbon::create($row->year, $row->month)->format('M Y'),
-                'omzet'    => (float) $row->omzet,
-                'bookings' => (int) $row->bookings,
-            ]);
+        // Monthly revenue aggregation for area chart (Database Agnostic)
+        $monthlyChart = $paidTransactions
+            ->groupBy(function ($t) {
+                $date = $t->paid_at ?? $t->created_at;
+                return $date ? $date->format('M Y') : 'Unknown';
+            })
+            ->map(fn ($group, $key) => [
+                'month'    => $key,
+                'omzet'    => (float) $group->sum('total_amount'),
+                'bookings' => (int) $group->count(),
+            ])
+            ->values();
 
-        // Service frequency distribution for bar chart
-        $serviceChart = BookingItem::select('service_id', DB::raw('SUM(quantity) as total'))
-            ->with('service:id,name')
-            ->groupBy('service_id')
-            ->orderByDesc('total')
-            ->take(5)
+        // Service frequency distribution for bar chart (Database Agnostic)
+        $serviceChart = BookingItem::with('service:id,name')
             ->get()
-            ->map(fn($item) => [
-                'name'  => $item->service?->name ?? 'Unknown',
-                'total' => (int) $item->total,
-            ]);
+            ->groupBy('service_id')
+            ->map(function ($group) {
+                $first = $group->first();
+                return [
+                    'name'  => $first->service?->name ?? 'Service #' . $first->service_id,
+                    'total' => (int) $group->sum('quantity'),
+                ];
+            })
+            ->sortByDesc('total')
+            ->take(5)
+            ->values();
 
         return Inertia::render('admin/ReportsAnalytics', [
             'transactions' => $paidTransactions,

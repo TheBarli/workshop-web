@@ -1,7 +1,7 @@
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
+import PasswordInput from '@/Components/PasswordInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, useForm } from '@inertiajs/react';
 
@@ -19,38 +19,41 @@ export default function ConfirmPassword() {
     };
 
     return (
-        <>
-            <Head title="Confirm Password" />
+        <div className="flex min-h-[70vh] items-center justify-center px-4 py-8">
+            <div className="w-full max-w-md space-y-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
+                <Head title="Konfirmasi Password" />
 
-            <div className="mb-4 text-sm text-gray-600">
-                This is a secure area of the application. Please confirm your
-                password before continuing.
+                <h2 className="text-xl font-extrabold text-[#091426]">Konfirmasi Kata Sandi</h2>
+
+                <p className="text-xs text-slate-600">
+                    Area ini memerlukan konfirmasi keamanan. Masukkan kata sandi Anda sebelum melanjutkan.
+                </p>
+
+                <form onSubmit={submit} className="space-y-4 pt-2">
+                    <div>
+                        <InputLabel htmlFor="password" value="Kata Sandi (Password)" className="text-xs font-semibold" />
+
+                        <div className="mt-1">
+                            <PasswordInput
+                                id="password"
+                                name="password"
+                                value={data.password}
+                                onChange={(e) => setData('password', e.target.value)}
+                                placeholder="••••••••"
+                            />
+                        </div>
+
+                        <InputError message={errors.password} className="mt-1 text-xs" />
+                    </div>
+
+                    <div className="flex justify-end pt-2">
+                        <PrimaryButton disabled={processing} className="bg-[#eb6905] hover:bg-[#d95d00] border-none text-xs px-5 py-2.5 rounded-xl font-bold">
+                            Konfirmasi
+                        </PrimaryButton>
+                    </div>
+                </form>
             </div>
-
-            <form onSubmit={submit}>
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
-                        id="password"
-                        type="password"
-                        name="password"
-                        value={data.password}
-                        className="mt-1 block w-full"
-                        isFocused={true}
-                        onChange={(e) => setData('password', e.target.value)}
-                    />
-
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
-
-                <div className="mt-4 flex items-center justify-end">
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Confirm
-                    </PrimaryButton>
-                </div>
-            </form>
-        </>
+        </div>
     );
 }
 
