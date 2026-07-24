@@ -6,6 +6,7 @@ import {
   Car,
   Clock,
   Wrench,
+  Package,
   CheckCircle2,
   ChevronRight,
   ChevronLeft,
@@ -13,22 +14,46 @@ import {
   Sparkles,
 } from 'lucide-react';
 
+const TIME_SLOTS = [
+  { time: '08:00', label: '08:00 WIB (Pagi)' },
+  { time: '09:30', label: '09:30 WIB (Pagi)' },
+  { time: '11:00', label: '11:00 WIB (Siang)' },
+  { time: '13:00', label: '13:00 WIB (Siang)' },
+  { time: '14:30', label: '14:30 WIB (Sore)' },
+  { time: '16:00', label: '16:00 WIB (Sore)' },
+];
+
 const CreateBooking = ({ vehicles = [], services = [] }) => {
   const { auth } = usePage().props;
   const user = auth?.user;
 
   const [step, setStep] = useState(1);
+  const [bookingType, setBookingType] = useState('service'); // 'service' | 'sparepart'
+
+  const [bookingDate, setBookingDate] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  });
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState('09:30');
 
   const form = useForm({
     vehicle_id:      vehicles[0]?.id ?? '',
-    scheduled_at:    '',
+    scheduled_at:    `${bookingDate} ${selectedTimeSlot}:00`,
     complaint_notes: '',
     service_ids:     services[0] ? [services[0].id] : [],
   });
 
+  const handleDateOrTimeChange = (newDate, newTime) => {
+    setBookingDate(newDate);
+    setSelectedTimeSlot(newTime);
+    form.setData('scheduled_at', `${newDate} ${newTime}:00`);
+  };
+
   const selectedVehicle  = vehicles.find((v) => v.id === Number(form.data.vehicle_id));
   const selectedServices = services.filter((s) => form.data.service_ids.includes(s.id));
   const totalPrice       = selectedServices.reduce((acc, s) => acc + Number(s.price), 0);
+  const totalEstimatedMinutes = selectedServices.reduce((acc, s) => acc + (Number(s.estimated_minutes) || 30), 0);
 
   const toggleService = (id) => {
     const current = [...form.data.service_ids];
@@ -41,6 +66,7 @@ const CreateBooking = ({ vehicles = [], services = [] }) => {
   };
 
   const handleSubmit = () => {
+    form.setData('scheduled_at', `${bookingDate} ${selectedTimeSlot}:00`);
     form.post(route('customer.bookings.store'));
   };
 
@@ -50,11 +76,40 @@ const CreateBooking = ({ vehicles = [], services = [] }) => {
       {/* Title & Stepper */}
       <div className="space-y-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-[#091426]">Formulir Reservasi Servis Online</h1>
-          <p className="text-xs text-slate-600">Lengkapi 3 langkah sederhana untuk mengamankan slot reservasi Anda.</p>
+          <h1 className="text-2xl font-extrabold text-[#091426]">Formulir Reservasi &amp; Pemesanan Online</h1>
+          <p className="text-xs text-slate-600">Lengkapi 3 langkah sederhana untuk reservasi jadwal atau pemesanan sparepart.</p>
         </div>
+
+        {/* Tab Selection: Service vs Sparepart */}
+        <div className="grid grid-cols-2 gap-3 p-1.5 rounded-2xl bg-slate-100 border border-slate-200 text-xs font-bold">
+          <button
+            type="button"
+            onClick={() => setBookingType('service')}
+            className={`flex items-center justify-center space-x-2 py-2.5 rounded-xl transition-all ${
+              bookingType === 'service'
+                ? 'bg-slate-900 text-white shadow-md'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Wrench className="h-4 w-4 text-[#eb6905]" />
+            <span>Booking Servis Perbaikan</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setBookingType('sparepart')}
+            className={`flex items-center justify-center space-x-2 py-2.5 rounded-xl transition-all ${
+              bookingType === 'sparepart'
+                ? 'bg-slate-900 text-white shadow-md'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Package className="h-4 w-4 text-[#eb6905]" />
+            <span>Pemesanan &amp; Pemasangan Sparepart</span>
+          </button>
+        </div>
+
         <div className="grid grid-cols-3 gap-2 rounded-2xl bg-white p-2 border border-slate-200 shadow-xs text-xs font-bold text-center">
-          {['1. Kendaraan', '2. Jadwal & Keluhan', '3. Ringkasan'].map((label, i) => (
+          {['1. Kendaraan', '2. Jam & Layanan', '3. Konfirmasi'].map((label, i) => (
             <div
               key={i}
               className={`py-2 rounded-xl transition-colors ${
@@ -84,7 +139,7 @@ const CreateBooking = ({ vehicles = [], services = [] }) => {
           <div className="space-y-4">
             <h3 className="text-base font-bold text-slate-900 flex items-center space-x-2">
               <Car className="h-5 w-5 text-[#eb6905]" />
-              <span>Langkah 1: Pilih Unit Kendaraan</span>
+              <span>Langkah 1: Pilih Unit Kendaraan Anda</span>
             </h3>
 
             {vehicles.length === 0 ? (
@@ -128,32 +183,86 @@ const CreateBooking = ({ vehicles = [], services = [] }) => {
           </div>
         )}
 
-        {/* STEP 2: SERVICES + SCHEDULE */}
+        {/* STEP 2: SCHEDULE (CLEAR HOURS & MINUTES UI) + SERVICES */}
         {step === 2 && (
           <div className="space-y-6">
             <h3 className="text-base font-bold text-slate-900 flex items-center space-x-2">
-              <Wrench className="h-5 w-5 text-[#eb6905]" />
-              <span>Langkah 2: Jadwal, Layanan &amp; Keluhan</span>
+              <Clock className="h-5 w-5 text-[#eb6905]" />
+              <span>Langkah 2: Atur Jam Kedatangan &amp; Layanan</span>
             </h3>
 
-            {/* Scheduled datetime */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Tanggal &amp; Jam Reservasi *</label>
-              <input
-                type="datetime-local"
-                value={form.data.scheduled_at}
-                min={new Date(Date.now() + 3600 * 1000).toISOString().slice(0, 16)}
-                onChange={(e) => form.setData('scheduled_at', e.target.value)}
-                className="w-full sm:w-72 rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-900 focus:border-[#eb6905] focus:outline-none"
-              />
-              {form.errors.scheduled_at && (
-                <p className="text-xs text-rose-600 mt-1">{form.errors.scheduled_at}</p>
-              )}
+            {/* Clear Hours & Minutes Picker UI */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-4">
+              <div className="flex items-center space-x-2 text-xs font-bold text-slate-900 border-b border-slate-200 pb-3">
+                <Calendar className="h-4 w-4 text-[#eb6905]" />
+                <span>Pengaturan Tanggal &amp; Jam Kedatangan</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Date Selection */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">1. Pilih Tanggal Reservasi *</label>
+                  <input
+                    type="date"
+                    value={bookingDate}
+                    min={new Date().toISOString().split('T')[0]}
+                    onChange={(e) => handleDateOrTimeChange(e.target.value, selectedTimeSlot)}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:border-[#eb6905] focus:outline-none"
+                  />
+                </div>
+
+                {/* Time Slot Selection */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">2. Pilih Jam Kedatangan (WIB) *</label>
+                  <select
+                    value={selectedTimeSlot}
+                    onChange={(e) => handleDateOrTimeChange(bookingDate, e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:border-[#eb6905] focus:outline-none"
+                  >
+                    {TIME_SLOTS.map((slot) => (
+                      <option key={slot.time} value={slot.time}>
+                        {slot.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Quick Time Badges */}
+              <div className="space-y-1.5 pt-1">
+                <p className="text-[11px] font-semibold text-slate-500">Pilih Slot Jam Cepat:</p>
+                <div className="flex flex-wrap gap-2">
+                  {TIME_SLOTS.map((slot) => (
+                    <button
+                      key={slot.time}
+                      type="button"
+                      onClick={() => handleDateOrTimeChange(bookingDate, slot.time)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                        selectedTimeSlot === slot.time
+                          ? 'bg-[#eb6905] text-white shadow-md scale-105'
+                          : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      ⏱️ {slot.time} WIB
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Estimated Duration Indicator */}
+              <div className="flex items-center justify-between rounded-xl bg-white p-3 border border-slate-200 text-xs">
+                <span className="text-slate-600 font-medium">Jam Kedatangan Dipilih:</span>
+                <span className="font-extrabold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg">
+                  {new Date(`${bookingDate}T${selectedTimeSlot}`).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' })} — Pukul {selectedTimeSlot} WIB
+                </span>
+              </div>
             </div>
 
-            {/* Service selection */}
+            {/* Service / Sparepart Selection */}
             <div className="space-y-3">
-              <label className="block text-xs font-semibold text-slate-700">Pilih Jenis Layanan (bisa lebih dari satu) *</label>
+              <label className="block text-xs font-semibold text-slate-700">
+                Pilih {bookingType === 'service' ? 'Paket Layanan Servis' : 'Suku Cadang (Sparepart)'} (Bisa Lebih Dari Satu) *
+              </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {services.map((service) => {
                   const isChecked = form.data.service_ids.includes(service.id);
@@ -169,7 +278,12 @@ const CreateBooking = ({ vehicles = [], services = [] }) => {
                     >
                       <input type="checkbox" checked={isChecked} readOnly className="mt-1 rounded accent-[#eb6905]" />
                       <div className="space-y-1">
-                        <p className="text-xs font-bold">{service.name}</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-bold">{service.name}</p>
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isChecked ? 'bg-slate-800 text-amber-400' : 'bg-slate-200 text-slate-700'}`}>
+                            ⏱️ {service.estimated_minutes || 30} Menit
+                          </span>
+                        </div>
                         {service.description && (
                           <p className={`text-[11px] leading-relaxed ${isChecked ? 'text-slate-300' : 'text-slate-500'}`}>
                             {service.description}
@@ -190,12 +304,12 @@ const CreateBooking = ({ vehicles = [], services = [] }) => {
 
             {/* Complaint notes */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Catatan Keluhan (Opsional)</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Catatan Keluhan / Instruksi Pemasangan (Opsional)</label>
               <textarea
                 rows="3"
                 value={form.data.complaint_notes}
                 onChange={(e) => form.setData('complaint_notes', e.target.value)}
-                placeholder="Contoh: Suara mesin kasar saat rpm tinggi, rem berdecit..."
+                placeholder="Contoh: Tolong sekalian periksa oli transmisi dan bunyi rem berdecit..."
                 className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3 text-xs font-medium text-slate-900 focus:border-[#eb6905] focus:outline-none"
               />
             </div>
@@ -206,8 +320,8 @@ const CreateBooking = ({ vehicles = [], services = [] }) => {
         {step === 3 && (
           <div className="space-y-6">
             <div className="border-b border-slate-200 pb-4 space-y-1">
-              <h3 className="text-base font-bold text-slate-900">Langkah 3: Ringkasan Reservasi</h3>
-              <p className="text-xs text-slate-500">Periksa kembali rincian booking sebelum mengonfirmasi.</p>
+              <h3 className="text-base font-bold text-slate-900">Langkah 3: Ringkasan &amp; Konfirmasi Reservasi</h3>
+              <p className="text-xs text-slate-500">Periksa kembali detail jadwal jam kedatangan dan item servis sebelum mengonfirmasi.</p>
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-4 text-xs">
@@ -219,25 +333,30 @@ const CreateBooking = ({ vehicles = [], services = [] }) => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-slate-500">Jadwal Reservasi:</p>
+                  <p className="text-slate-500">Jadwal Jam Kedatangan:</p>
                   <p className="font-bold text-slate-900 text-sm mt-0.5">
-                    {form.data.scheduled_at
-                      ? new Date(form.data.scheduled_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
-                      : '—'}
+                    {new Date(`${bookingDate}T${selectedTimeSlot}`).toLocaleString('id-ID', { dateStyle: 'medium' })} Pukul {selectedTimeSlot} WIB
                   </p>
                 </div>
               </div>
 
               <div className="border-t border-slate-200 pt-3">
-                <p className="text-slate-500 mb-2">Layanan Dipilih:</p>
+                <p className="text-slate-500 mb-2">Item Dipilih &amp; Estimasi Durasi:</p>
                 <ul className="space-y-1.5 font-medium text-slate-800">
                   {selectedServices.map((s) => (
-                    <li key={s.id} className="flex justify-between">
-                      <span>• {s.name}</span>
+                    <li key={s.id} className="flex justify-between items-center">
+                      <span>• {s.name} ({s.estimated_minutes || 30} Menit)</span>
                       <span className="font-bold">Rp {Number(s.price).toLocaleString('id-ID')}</span>
                     </li>
                   ))}
                 </ul>
+              </div>
+
+              <div className="border-t border-slate-200 pt-3 flex items-center justify-between">
+                <span className="text-slate-500">Total Estimasi Durasi Pengerjaan:</span>
+                <span className="font-bold text-slate-900 bg-slate-200 px-2 py-0.5 rounded">
+                  ⏱️ {totalEstimatedMinutes} Menit
+                </span>
               </div>
 
               {form.data.complaint_notes && (
@@ -248,7 +367,7 @@ const CreateBooking = ({ vehicles = [], services = [] }) => {
               )}
 
               <div className="border-t border-slate-200 pt-3 flex items-center justify-between text-sm">
-                <span className="font-bold text-slate-900">Total Estimasi Awal:</span>
+                <span className="font-bold text-slate-900">Total Biaya Estimasi:</span>
                 <span className="font-extrabold text-[#eb6905] text-base">
                   Rp {totalPrice.toLocaleString('id-ID')}
                 </span>
@@ -257,7 +376,7 @@ const CreateBooking = ({ vehicles = [], services = [] }) => {
 
             <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900 flex items-center space-x-2">
               <Sparkles className="h-4 w-4 text-blue-600 shrink-0" />
-              <span>Notifikasi status booking akan dikirimkan otomatis ke WhatsApp Anda ({user?.phone_number ?? '—'}).</span>
+              <span>Konfirmasi pengingat jadwal jam kedatangan akan dikirimkan ke nomor WhatsApp Anda ({user?.phone_number ?? '—'}).</span>
             </div>
           </div>
         )}
@@ -293,11 +412,11 @@ const CreateBooking = ({ vehicles = [], services = [] }) => {
               className="flex items-center space-x-2 rounded-xl bg-[#eb6905] px-6 py-3 text-xs font-bold text-white shadow-lg hover:bg-[#d95d00] transition-colors disabled:opacity-50"
             >
               {form.processing ? (
-                <span className="animate-pulse">Menyimpan Booking...</span>
+                <span className="animate-pulse">Menyimpan Reservasi...</span>
               ) : (
                 <>
                   <CheckCircle2 className="h-4 w-4" />
-                  <span>Konfirmasi Booking Servis</span>
+                  <span>Konfirmasi Reservasi</span>
                 </>
               )}
             </button>

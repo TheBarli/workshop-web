@@ -46,24 +46,29 @@ class User extends Authenticatable
 
     // --- Role Helpers ---
 
+    public function activeRole(): string
+    {
+        return session('user_role') ?? $this->role;
+    }
+
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->activeRole() === 'admin';
     }
 
     public function isOwner(): bool
     {
-        return $this->role === 'owner';
+        return $this->activeRole() === 'owner';
     }
 
     public function isMechanic(): bool
     {
-        return $this->role === 'mechanic';
+        return $this->activeRole() === 'mechanic';
     }
 
     public function isCustomer(): bool
     {
-        return $this->role === 'customer';
+        return $this->activeRole() === 'customer';
     }
 
     // --- Relationships ---

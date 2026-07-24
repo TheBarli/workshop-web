@@ -40,6 +40,7 @@ const Navbar = () => {
   const handleRoleChange = (role) => {
     switchRole(role);
     setRoleDropdownOpen(false);
+    setMobileMenuOpen(false);
     if (role === 'customer') router.visit('/customer/dashboard');
     else if (role === 'mechanic') router.visit('/admin/schedule');
     else if (role === 'admin') router.visit('/admin/dashboard');
@@ -215,14 +216,17 @@ const Navbar = () => {
                     <p className="text-xs font-bold text-slate-900 truncate">{user?.name}</p>
                     <p className="text-[11px] text-slate-500 truncate">{user?.email}</p>
                   </div>
-                  <Link
-                    href="/customer/profile"
-                    onClick={() => setProfileDropdownOpen(false)}
-                    className="flex items-center space-x-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProfileDropdownOpen(false);
+                      router.visit('/profile');
+                    }}
+                    className="flex w-full items-center space-x-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 text-left"
                   >
                     <User className="h-4 w-4 text-slate-400" />
                     <span>Profil Saya</span>
-                  </Link>
+                  </button>
                   <button
                     onClick={() => {
                       logout();
@@ -265,55 +269,172 @@ const Navbar = () => {
 
       {/* Mobile Navigation Drawer */}
       {mobileMenuOpen && (
-        <div className="border-b border-slate-200 bg-white p-4 md:hidden">
-          <div className="flex flex-col space-y-2">
+        <div className="border-b border-slate-200 bg-white p-4 md:hidden space-y-4">
+          
+          {/* Mobile User Profile Card */}
+          {isAuthenticated && (
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200">
+              <div className="flex items-center space-x-3 truncate">
+                <img
+                  src={user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
+                  alt={user?.name}
+                  className="h-10 w-10 rounded-full object-cover border border-slate-200 shrink-0"
+                />
+                <div className="truncate text-xs">
+                  <p className="font-bold text-slate-900 truncate">{user?.name}</p>
+                  <span className={`inline-block mt-0.5 rounded px-1.5 py-0.5 text-[10px] font-bold border ${getRoleBadgeColor(user?.role)}`}>
+                    {user?.role}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  router.visit('/profile');
+                }}
+                className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:bg-slate-100 shrink-0"
+                title="Profil Saya"
+              >
+                <User className="h-4 w-4 text-[#eb6905]" />
+              </button>
+            </div>
+          )}
+
+          {/* Navigation Links */}
+          <div className="flex flex-col space-y-1">
             <Link
               href="/"
               onClick={() => setMobileMenuOpen(false)}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               Beranda
             </Link>
             <Link
               href="/services"
               onClick={() => setMobileMenuOpen(false)}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               Layanan Servis
             </Link>
             <Link
               href="/spareparts"
               onClick={() => setMobileMenuOpen(false)}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               Katalog Sparepart
             </Link>
+
             {isAuthenticated && (
               <>
                 <Link
                   href="/customer/dashboard"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  className="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                 >
                   Dashboard Customer
                 </Link>
                 <Link
                   href="/customer/bookings"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  className="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                 >
                   Booking Servis
                 </Link>
-                <Link
-                  href="/admin/dashboard"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white"
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    router.visit('/profile');
+                  }}
+                  className="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center justify-between w-full text-left"
                 >
-                  Admin Workbench
-                </Link>
+                  <span>Profil Saya</span>
+                  <User className="h-4 w-4 text-slate-400" />
+                </button>
+
+                {['admin', 'owner', 'mechanic'].includes(user?.role) && (
+                  <Link
+                    href={user?.role === 'mechanic' ? '/admin/schedule' : user?.role === 'owner' ? '/admin/reports' : '/admin/dashboard'}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="rounded-xl bg-slate-900 px-3.5 py-2.5 text-sm font-bold text-white flex items-center justify-between mt-2"
+                  >
+                    <span>Admin Workbench</span>
+                    <LayoutDashboard className="h-4 w-4 text-[#eb6905]" />
+                  </Link>
+                )}
               </>
             )}
           </div>
+
+          {/* Mobile Role Switcher Demo Widget */}
+          {isAuthenticated && (
+            <div className="pt-2 border-t border-slate-100 space-y-2">
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                Simulasi Role (Demo Mobile):
+              </p>
+              <div className="grid grid-cols-2 gap-1.5 text-xs">
+                <button
+                  onClick={() => handleRoleChange('customer')}
+                  className={`p-2 rounded-xl text-left font-medium border ${user?.role === 'customer' ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold' : 'bg-slate-50 text-slate-700 border-slate-200'}`}
+                >
+                  👤 Customer
+                </button>
+                <button
+                  onClick={() => handleRoleChange('mechanic')}
+                  className={`p-2 rounded-xl text-left font-medium border ${user?.role === 'mechanic' ? 'bg-indigo-50 text-indigo-800 border-indigo-300 font-bold' : 'bg-slate-50 text-slate-700 border-slate-200'}`}
+                >
+                  🛠️ Mekanik
+                </button>
+                <button
+                  onClick={() => handleRoleChange('admin')}
+                  className={`p-2 rounded-xl text-left font-medium border ${user?.role === 'admin' ? 'bg-blue-50 text-blue-800 border-blue-300 font-bold' : 'bg-slate-50 text-slate-700 border-slate-200'}`}
+                >
+                  💳 Admin/Kasir
+                </button>
+                <button
+                  onClick={() => handleRoleChange('owner')}
+                  className={`p-2 rounded-xl text-left font-medium border ${user?.role === 'owner' ? 'bg-purple-50 text-purple-800 border-purple-300 font-bold' : 'bg-slate-50 text-slate-700 border-slate-200'}`}
+                >
+                  📈 Owner
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Footer Auth Buttons */}
+          <div className="pt-2 border-t border-slate-100">
+            {isAuthenticated ? (
+              <button
+                onClick={() => {
+                  logout();
+                  setMobileMenuOpen(false);
+                }}
+                className="flex w-full items-center justify-center space-x-2 rounded-xl bg-rose-50 p-2.5 text-xs font-bold text-rose-600 border border-rose-200"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Keluar (Logout)</span>
+              </button>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-xl border border-slate-200 bg-white py-2.5 text-center text-xs font-bold text-slate-700"
+                >
+                  Masuk
+                </Link>
+                <Link
+                  href="/register"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-xl bg-[#eb6905] py-2.5 text-center text-xs font-bold text-white shadow-sm"
+                >
+                  Daftar Akun
+                </Link>
+              </div>
+            )}
+          </div>
+
         </div>
       )}
     </header>

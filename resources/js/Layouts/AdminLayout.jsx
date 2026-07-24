@@ -11,8 +11,11 @@ import {
   LogOut,
   ChevronRight,
   UserCheck,
-  Bell,
+  Users,
   ShieldAlert,
+  Menu,
+  X,
+  User,
 } from 'lucide-react';
 
 const AdminLayout = ({ children }) => {
@@ -20,6 +23,7 @@ const AdminLayout = ({ children }) => {
   const { auth } = page.props;
   const user = auth?.user;
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const currentPath = new URL(page.url, window.location.origin).pathname;
 
   const isActive = (path) => currentPath === path;
@@ -38,13 +42,21 @@ const AdminLayout = ({ children }) => {
   const roleInfo = getRoleBadge(user?.role || 'admin');
 
   return (
-    <div className="flex min-h-screen bg-[#0b1c30] text-slate-100">
+    <div className="flex min-h-screen bg-[#0b1c30] text-slate-100 relative">
       
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-xs md:hidden"
+        />
+      )}
+
       {/* Admin Sidebar Container */}
       <aside
-        className={`flex flex-col border-r border-slate-800 bg-[#091426] transition-all duration-300 ${
-          collapsed ? 'w-20' : 'w-64'
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-slate-800 bg-[#091426] transition-all duration-300 md:static ${
+          mobileOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0'
+        } ${collapsed ? 'md:w-20' : 'md:w-64'}`}
       >
         {/* Sidebar Brand Header */}
         <div className="flex h-16 items-center justify-between border-b border-slate-800 px-4">
@@ -52,7 +64,7 @@ const AdminLayout = ({ children }) => {
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#eb6905] text-white shadow-md">
               <Wrench className="h-5 w-5" />
             </div>
-            {!collapsed && (
+            {(!collapsed || mobileOpen) && (
               <div className="truncate">
                 <span className="text-base font-bold text-white tracking-tight">Bengkel Stelle</span>
                 <span className="ml-1 text-[10px] font-extrabold text-[#eb6905] uppercase">PANEL</span>
@@ -61,9 +73,15 @@ const AdminLayout = ({ children }) => {
           </Link>
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
+            className="hidden md:block rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
           >
             <ChevronRight className={`h-4 w-4 transform transition-transform ${collapsed ? '' : 'rotate-180'}`} />
+          </button>
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="md:hidden rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
+          >
+            <X className="h-5 w-5" />
           </button>
         </div>
 
@@ -75,7 +93,7 @@ const AdminLayout = ({ children }) => {
               alt={user?.name}
               className="h-9 w-9 rounded-full object-cover border border-slate-700 shrink-0"
             />
-            {!collapsed && (
+            {(!collapsed || mobileOpen) && (
               <div className="truncate text-xs">
                 <p className="font-bold text-white truncate">{user?.name}</p>
                 <span className={`inline-block mt-0.5 rounded px-1.5 py-0.5 text-[9px] font-extrabold ${roleInfo.color}`}>
@@ -87,9 +105,10 @@ const AdminLayout = ({ children }) => {
         </div>
 
         {/* Sidebar Menu Items */}
-        <nav className="flex-1 space-y-1 p-3">
+        <nav className="flex-1 space-y-1 p-3 overflow-y-auto">
           <Link
             href="/admin/dashboard"
+            onClick={() => setMobileOpen(false)}
             className={`flex items-center space-x-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
               isActive('/admin/dashboard')
                 ? 'bg-[#eb6905] text-white shadow-lg shadow-[#eb6905]/20'
@@ -97,11 +116,12 @@ const AdminLayout = ({ children }) => {
             }`}
           >
             <LayoutDashboard className="h-4 w-4 shrink-0" />
-            {!collapsed && <span>Monitoring Dashboard</span>}
+            {(!collapsed || mobileOpen) && <span>Monitoring Dashboard</span>}
           </Link>
 
           <Link
             href="/admin/schedule"
+            onClick={() => setMobileOpen(false)}
             className={`flex items-center space-x-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
               isActive('/admin/schedule')
                 ? 'bg-[#eb6905] text-white shadow-lg shadow-[#eb6905]/20'
@@ -109,11 +129,12 @@ const AdminLayout = ({ children }) => {
             }`}
           >
             <CalendarCheck className="h-4 w-4 shrink-0" />
-            {!collapsed && <span>Slot & Queue Management</span>}
+            {(!collapsed || mobileOpen) && <span>Slot &amp; Queue Management</span>}
           </Link>
 
           <Link
             href="/admin/work-orders"
+            onClick={() => setMobileOpen(false)}
             className={`flex items-center space-x-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
               isActive('/admin/work-orders')
                 ? 'bg-[#eb6905] text-white shadow-lg shadow-[#eb6905]/20'
@@ -121,11 +142,12 @@ const AdminLayout = ({ children }) => {
             }`}
           >
             <ClipboardList className="h-4 w-4 shrink-0" />
-            {!collapsed && <span>Work Orders (Mekanik)</span>}
+            {(!collapsed || mobileOpen) && <span>Work Orders (Mekanik)</span>}
           </Link>
 
           <Link
             href="/admin/pos"
+            onClick={() => setMobileOpen(false)}
             className={`flex items-center space-x-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
               isActive('/admin/pos')
                 ? 'bg-[#eb6905] text-white shadow-lg shadow-[#eb6905]/20'
@@ -133,11 +155,12 @@ const AdminLayout = ({ children }) => {
             }`}
           >
             <ShoppingCart className="h-4 w-4 shrink-0 text-amber-400" />
-            {!collapsed && <span>POS Kasir & Thermal Print</span>}
+            {(!collapsed || mobileOpen) && <span>POS Kasir &amp; Thermal Print</span>}
           </Link>
 
           <Link
             href="/admin/inventory"
+            onClick={() => setMobileOpen(false)}
             className={`flex items-center space-x-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
               isActive('/admin/inventory')
                 ? 'bg-[#eb6905] text-white shadow-lg shadow-[#eb6905]/20'
@@ -145,11 +168,25 @@ const AdminLayout = ({ children }) => {
             }`}
           >
             <PackageSearch className="h-4 w-4 shrink-0" />
-            {!collapsed && <span>Inventory & Stock Control</span>}
+            {(!collapsed || mobileOpen) && <span>Inventory &amp; Stock Control</span>}
+          </Link>
+
+          <Link
+            href="/owner/users"
+            onClick={() => setMobileOpen(false)}
+            className={`flex items-center space-x-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
+              isActive('/owner/users') || isActive('/admin/users')
+                ? 'bg-[#eb6905] text-white shadow-lg shadow-[#eb6905]/20'
+                : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
+            }`}
+          >
+            <Users className="h-4 w-4 shrink-0 text-purple-400" />
+            {(!collapsed || mobileOpen) && <span>Manajemen Role &amp; Pengguna</span>}
           </Link>
 
           <Link
             href="/admin/reports"
+            onClick={() => setMobileOpen(false)}
             className={`flex items-center space-x-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
               isActive('/admin/reports')
                 ? 'bg-[#eb6905] text-white shadow-lg shadow-[#eb6905]/20'
@@ -157,7 +194,7 @@ const AdminLayout = ({ children }) => {
             }`}
           >
             <BarChart3 className="h-4 w-4 shrink-0 text-emerald-400" />
-            {!collapsed && <span>Laporan Keuangan & Analytics</span>}
+            {(!collapsed || mobileOpen) && <span>Laporan Keuangan &amp; Analytics</span>}
           </Link>
         </nav>
 
@@ -165,9 +202,10 @@ const AdminLayout = ({ children }) => {
         <div className="border-t border-slate-800 p-3 space-y-2">
           <Link
             href="/customer/dashboard"
-            className="flex items-center justify-center space-x-2 rounded-xl bg-slate-800/60 px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white"
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center justify-center space-x-2 rounded-xl bg-slate-800/40 px-3 py-2 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white"
           >
-            <span>Portal Customer</span>
+            {(!collapsed || mobileOpen) && <span>Portal Customer</span>}
           </Link>
           <button
             onClick={() => {
@@ -176,17 +214,23 @@ const AdminLayout = ({ children }) => {
             className="flex w-full items-center justify-center space-x-2 rounded-xl bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-400 hover:bg-rose-500/20"
           >
             <LogOut className="h-4 w-4" />
-            {!collapsed && <span>Keluar</span>}
+            {(!collapsed || mobileOpen) && <span>Keluar</span>}
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex flex-1 flex-col overflow-x-hidden">
+      <div className="flex flex-1 flex-col overflow-x-hidden min-w-0">
         
         {/* Top Panel Navbar */}
-        <header className="flex h-16 items-center justify-between border-b border-slate-800 bg-[#091426]/90 px-6 backdrop-blur-md">
+        <header className="flex h-16 items-center justify-between border-b border-slate-800 bg-[#091426]/90 px-4 sm:px-6 backdrop-blur-md">
           <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="md:hidden rounded-lg p-1.5 text-slate-300 hover:bg-slate-800"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
             <span className="rounded-md bg-[#eb6905]/20 px-2 py-1 text-[11px] font-extrabold text-[#eb6905] border border-[#eb6905]/30">
               OPERATIONAL PANEL
             </span>
@@ -198,20 +242,13 @@ const AdminLayout = ({ children }) => {
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2 text-xs bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg text-emerald-400">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>System Live • Redis Queue Active</span>
+              <span>System Live</span>
             </div>
-
-            <button className="relative rounded-lg bg-slate-900 p-2 text-slate-400 hover:text-white border border-slate-800">
-              <Bell className="h-4 w-4" />
-              <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-[#eb6905] text-[9px] font-bold text-white">
-                3
-              </span>
-            </button>
           </div>
         </header>
 
         {/* Page Content View */}
-        <main className="flex-1 bg-[#f8f9ff] text-slate-900 p-6 overflow-y-auto">
+        <main className="flex-1 bg-[#f8f9ff] text-slate-900 p-4 sm:p-6 overflow-y-auto">
           {children}
         </main>
       </div>

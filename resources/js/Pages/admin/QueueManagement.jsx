@@ -1,15 +1,7 @@
 import React, { useState } from 'react';
 import { router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Calendar, Clock, CheckCircle2, UserCheck, Wrench, Car, Filter } from 'lucide-react';
-
-const STATUS_OPTIONS = [
-  { value: 'pending',     label: 'Menunggu' },
-  { value: 'confirmed',   label: 'Dikonfirmasi' },
-  { value: 'in_progress', label: 'Sedang Dikerjakan' },
-  { value: 'completed',   label: 'Selesai' },
-  { value: 'cancelled',   label: 'Batalkan' },
-];
+import { Calendar, Clock, CheckCircle2, UserCheck, Wrench, Car, Filter, XCircle } from 'lucide-react';
 
 const STATUS_BADGE = {
   pending:     'bg-amber-50 text-amber-800 border-amber-200',
@@ -54,16 +46,16 @@ const QueueManagement = ({ queue = [], mechanics = [] }) => {
         <div>
           <h1 className="text-2xl font-extrabold text-[#091426]">Manajemen Antrean &amp; Jadwal Slot</h1>
           <p className="text-xs text-slate-500 mt-1">
-            Kelola antrean reservasi, konfirmasi slot, dan tugaskan mekanik.
+            Kelola antrean reservasi, konfirmasi slot, tugaskan mekanik, atau batalkan antrean.
           </p>
         </div>
-        <div className="flex items-center space-x-1 text-xs">
-          <Filter className="h-4 w-4 text-slate-400 mr-1" />
-          {['all', 'pending', 'confirmed', 'in_progress'].map((f) => (
+        <div className="flex flex-wrap items-center gap-1 text-xs">
+          <Filter className="h-4 w-4 text-slate-400 mr-1 shrink-0" />
+          {['all', 'pending', 'confirmed', 'in_progress', 'completed', 'cancelled'].map((f) => (
             <button
               key={f}
               onClick={() => setActiveFilter(f)}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+              className={`px-2.5 py-1 rounded-lg font-semibold transition-colors ${
                 activeFilter === f ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -95,7 +87,7 @@ const QueueManagement = ({ queue = [], mechanics = [] }) => {
                         {STATUS_LABEL[booking.status] ?? booking.status}
                       </span>
                     </div>
-                    <div className="flex items-center space-x-3 text-xs text-slate-600 mt-1">
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 mt-1">
                       <span className="flex items-center space-x-1">
                         <Car className="h-3.5 w-3.5" />
                         <span>{booking.vehicle?.license_plate} ({booking.vehicle?.brand} {booking.vehicle?.model})</span>
@@ -109,7 +101,7 @@ const QueueManagement = ({ queue = [], mechanics = [] }) => {
                   </div>
 
                   {/* Status update controls */}
-                  <div className="flex items-center space-x-2 shrink-0">
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
                     {/* Mechanic assignment */}
                     {mechanics.length > 0 && booking.status !== 'completed' && booking.status !== 'cancelled' && (
                       <select
@@ -124,7 +116,7 @@ const QueueManagement = ({ queue = [], mechanics = [] }) => {
                       </select>
                     )}
 
-                    {/* Next status button */}
+                    {/* Action Buttons */}
                     {booking.status === 'pending' && (
                       <button
                         onClick={() => handleUpdateStatus(booking.id, 'confirmed')}
@@ -153,6 +145,23 @@ const QueueManagement = ({ queue = [], mechanics = [] }) => {
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         <span>Tandai Selesai</span>
+                      </button>
+                    )}
+
+                    {/* Tombol Membatalkan Antrian */}
+                    {booking.status !== 'completed' && booking.status !== 'cancelled' && (
+                      <button
+                        onClick={() => {
+                          if (confirm(`Apakah Anda yakin ingin membatalkan antrean ${booking.booking_code}?`)) {
+                            handleUpdateStatus(booking.id, 'cancelled');
+                          }
+                        }}
+                        disabled={updatingId === booking.id}
+                        className="flex items-center space-x-1 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 disabled:opacity-50 transition-colors"
+                        title="Batalkan Antrean Ini"
+                      >
+                        <XCircle className="h-3.5 w-3.5 text-rose-600" />
+                        <span>Batalkan Antrean</span>
                       </button>
                     )}
                   </div>

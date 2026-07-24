@@ -7,7 +7,7 @@ import {
   Receipt,
   CreditCard,
   QrCode,
-  DollarSign,
+  DollarSign,   
   CheckCircle2,
   Printer,
 } from 'lucide-react';

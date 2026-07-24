@@ -8,6 +8,8 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Customer\BookingController;
 use App\Http\Controllers\Customer\VehicleController;
+use App\Http\Controllers\Owner\UserManagementController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -52,6 +54,12 @@ Route::middleware(['auth'])->group(function () {
         session(['user_role' => $request->role]);
         return back();
     })->name('switch-role');
+
+    // Profile — accessible by all authenticated roles
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar'])->name('profile.avatar');
 });
 
 /*
@@ -81,6 +89,7 @@ Route::middleware(['auth', 'role:customer,admin,owner'])
         Route::patch('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
         Route::delete('/bookings/{booking}', [BookingController::class, 'destroy'])->name('bookings.destroy');
 
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile');
         Route::get('/history', [BookingController::class, 'history'])->name('history');
     });
 
@@ -106,9 +115,25 @@ Route::middleware(['auth', 'role:admin,mechanic,owner'])
         // Admin Service / Sparepart Inventory Management
         Route::post('/services', [AdminServiceController::class, 'store'])->name('services.store');
         Route::patch('/services/{service}', [AdminServiceController::class, 'update'])->name('services.update');
+        Route::delete('/services/{service}', [AdminServiceController::class, 'destroy'])->name('services.destroy');
 
         // POS Checkout — create Transaction
         Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| OWNER-ONLY ROUTES
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:owner,admin'])
+    ->prefix('owner')
+    ->name('owner.')
+    ->group(function () {
+        Route::get('/users', [UserManagementController::class, 'index'])->name('users');
+        Route::patch('/users/{user}/role', [UserManagementController::class, 'updateRole'])->name('users.role');
+        Route::patch('/users/{user}/status', [UserManagementController::class, 'updateStatus'])->name('users.status');
+        Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
     });
 
 Route::fallback(fn () => redirect('/'));

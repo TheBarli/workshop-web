@@ -17,7 +17,6 @@ class AdminServiceController extends Controller
      */
     public function store(StoreServiceRequest $request): RedirectResponse
     {
-
         Service::create($request->only([
             'code', 'name', 'category', 'price', 'stock', 'estimated_minutes', 'description',
         ]));
@@ -31,8 +30,22 @@ class AdminServiceController extends Controller
      */
     public function update(UpdateServiceRequest $request, Service $service): RedirectResponse
     {
-        $service->update(array_filter($request->only(['stock', 'price', 'name', 'estimated_minutes', 'description']), fn($v) => !is_null($v)));
+        $service->update(array_filter(
+            $request->only(['stock', 'price', 'name', 'category', 'estimated_minutes', 'description']),
+            fn($v) => !is_null($v)
+        ));
 
         return back()->with('success', 'Data item berhasil diperbarui.');
+    }
+
+    /**
+     * Delete an existing service or sparepart.
+     * DELETE /admin/services/{service}
+     */
+    public function destroy(Service $service): RedirectResponse
+    {
+        $service->delete();
+
+        return back()->with('success', 'Item inventaris berhasil dihapus.');
     }
 }

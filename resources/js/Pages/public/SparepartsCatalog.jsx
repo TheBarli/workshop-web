@@ -1,8 +1,19 @@
 import React, { useState } from 'react';
 import { Link } from '@inertiajs/react';
-import { Package, Search, ShieldAlert, CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Package, Search, CheckCircle2, AlertTriangle, ArrowRight, Wrench } from 'lucide-react';
 import { INITIAL_SPAREPARTS } from '../../services/mockData';
 import GuestLayout from '@/Layouts/GuestLayout';
+
+const SPAREPART_IMAGES = {
+  'SP-001': 'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=500', // Oli Mesin
+  'SP-002': 'https://images.unsplash.com/photo-1558442074-3c19857bc1dc?w=500', // Kampas Rem
+  'SP-003': 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=500', // Busi Iridium
+  'SP-004': 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=500', // Filter Oli
+  'SP-005': 'https://images.unsplash.com/photo-1578844251758-2f71da64c96f?w=500', // Akumulator / Aki
+  'SP-006': 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=500', // Ban Mobil
+};
+
+const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=500';
 
 const SparepartsCatalog = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -21,26 +32,26 @@ const SparepartsCatalog = () => {
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 space-y-8">
       
-      {/* Header & BR-005 Notice Banner */}
+      {/* Header Banner */}
       <div className="space-y-4">
         <div className="border-b border-slate-200 pb-4 space-y-2">
           <div className="flex items-center space-x-2 text-xs font-semibold text-[#eb6905]">
             <Package className="h-4 w-4" />
             <span>Katalog Suku Cadang Bengkel</span>
           </div>
-          <h1 className="text-3xl font-extrabold text-[#091426]">Informasi Suku Cadang & Spareparts</h1>
+          <h1 className="text-3xl font-extrabold text-[#091426]">Katalog Suku Cadang &amp; Sparepart Original</h1>
           <p className="text-xs text-slate-600">
-            Katalog stok suku cadang original yang tersedia di gudang Bengkel Stelle.
+            Daftar stok suku cadang resmi terlengkap beserta gambar visual dan informasi ketersediaan stok.
           </p>
         </div>
 
-        {/* BR-005 Business Rule Notice */}
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900 flex items-start space-x-3 text-xs">
+        {/* Ketentuan Pembelian BR-005 Notice */}
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-amber-900 flex items-start space-x-3 text-xs shadow-xs">
           <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <p className="font-bold">Ketentuan Pembelian Suku Cadang [BR-005]:</p>
-            <p className="text-slate-700">
-              Suku cadang diprioritaskan untuk pengerjaan servis fisik di bengkel dan <strong>tidak dapat dibeli secara retail online lepas</strong> tanpa membawa unit kendaraan. Seluruh harga tercantum adalah harga resmi pemasangan di lokasi.
+            <p className="font-bold">Ketentuan Pembelian &amp; Pemasangan Suku Cadang [BR-005]:</p>
+            <p className="text-slate-700 leading-relaxed">
+              Seluruh suku cadang diprioritaskan untuk reservasi penggantian fisik di lokasi bengkel agar terjamin keaslian dan presisi garansinya. Harga sudah termasuk konsultasi mekanik.
             </p>
           </div>
         </div>
@@ -52,7 +63,7 @@ const SparepartsCatalog = () => {
           <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Cari SKU atau nama sparepart..."
+            placeholder="Cari kode SKU atau nama sparepart..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-4 py-2 text-xs font-medium text-slate-900 placeholder-slate-400 focus:border-[#eb6905] focus:outline-none"
@@ -76,59 +87,75 @@ const SparepartsCatalog = () => {
         </div>
       </div>
 
-      {/* Spareparts Grid */}
+      {/* Spareparts Grid with Product Images */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredParts.map((part) => (
-          <div
-            key={part.id}
-            className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
-          >
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="rounded-md bg-slate-100 px-2 py-1 font-mono text-xs font-bold text-slate-700">
-                  {part.part_code}
-                </span>
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-700 border border-slate-200">
-                  {part.category}
-                </span>
+        {filteredParts.map((part) => {
+          const imgUrl = SPAREPART_IMAGES[part.part_code] || DEFAULT_IMAGE;
+          return (
+            <div
+              key={part.id}
+              className="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+            >
+              {/* Product Image & Badges */}
+              <div className="relative h-48 bg-slate-100 overflow-hidden">
+                <img
+                  src={imgUrl}
+                  alt={part.name}
+                  className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                />
+                <div className="absolute top-3 left-3 flex items-center space-x-2">
+                  <span className="rounded-lg bg-slate-900/90 backdrop-blur-xs px-2.5 py-1 font-mono text-[10px] font-bold text-white shadow-md">
+                    {part.part_code}
+                  </span>
+                </div>
+                <div className="absolute top-3 right-3">
+                  <span className="rounded-full bg-white/90 backdrop-blur-xs px-3 py-1 text-[10px] font-bold text-slate-800 shadow-md border border-slate-200">
+                    {part.category}
+                  </span>
+                </div>
               </div>
 
-              <h3 className="text-base font-bold text-slate-900">{part.name}</h3>
+              {/* Product Details */}
+              <div className="p-5 space-y-3 flex-1 flex flex-col justify-between">
+                <div className="space-y-2">
+                  <h3 className="text-base font-bold text-slate-900 leading-snug">{part.name}</h3>
 
-              <div className="flex items-center space-x-2 text-xs">
-                <span>Status Stok Gudang:</span>
-                {part.stock > part.min_stock ? (
-                  <span className="inline-flex items-center space-x-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-emerald-700 font-bold border border-emerald-200">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                    <span>Tersedia ({part.stock} Unit)</span>
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center space-x-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-amber-800 font-bold border border-amber-200">
-                    <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
-                    <span>Stok Tipis ({part.stock} Unit Left)</span>
-                  </span>
-                )}
+                  <div className="flex items-center space-x-2 text-xs">
+                    <span className="text-slate-500">Stok Gudang:</span>
+                    {part.stock > part.min_stock ? (
+                      <span className="inline-flex items-center space-x-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-emerald-700 font-bold border border-emerald-200">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                        <span>Tersedia ({part.stock} Unit)</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center space-x-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-amber-800 font-bold border border-amber-200">
+                        <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+                        <span>Stok Menipis ({part.stock} Unit Left)</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-100 pt-4 mt-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-semibold text-slate-400">Harga Unit Resmi</p>
+                    <p className="text-lg font-extrabold text-[#eb6905]">
+                      Rp {part.selling_price.toLocaleString('id-ID')}
+                    </p>
+                  </div>
+
+                  <Link
+                    href="/customer/bookings"
+                    className="flex items-center space-x-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-[#eb6905] transition-colors"
+                  >
+                    <Package className="h-3.5 w-3.5 text-[#eb6905]" />
+                    <span>Pesan / Reservasi Sparepart</span>
+                  </Link>
+                </div>
               </div>
             </div>
-
-            <div className="border-t border-slate-100 pt-4 mt-4 flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-semibold text-slate-400">Harga Resmi Unit</p>
-                <p className="text-lg font-extrabold text-[#eb6905]">
-                  Rp {part.selling_price.toLocaleString('id-ID')}
-                </p>
-              </div>
-
-              <Link
-                href="/customer/bookings"
-                className="flex items-center space-x-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-[#eb6905] transition-colors"
-              >
-                <span>Booking Servis</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
     </div>
