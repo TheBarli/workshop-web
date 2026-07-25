@@ -58,13 +58,30 @@ class UserManagementController extends Controller
     }
 
     /**
-     * Update a user's role (cannot change own role).
+     * Update a user's role.
      */
     public function updateRole(Request $request, User $user): RedirectResponse
     {
-        // Guard: cannot change own role
-        if ($user->id === auth()->id()) {
+        $currentUser = auth()->user();
+
+        // Guard 1: Cannot change own role
+        if ($user->id === $currentUser->id) {
             return back()->with('error', 'Kamu tidak bisa mengubah role dirimu sendiri.');
+        }
+
+        // Guard 2: Owner account is untouchable
+        if ($user->role === 'owner') {
+            return back()->with('error', 'Akun Owner adalah kasta tertinggi dan tidak dapat diubah rolenya.');
+        }
+
+        // Guard 3: Admin cannot touch another admin or assign admin/owner roles
+        if ($currentUser->role === 'admin') {
+            if ($user->role === 'admin') {
+                return back()->with('error', 'Admin tidak memiliki hak akses untuk mengubah role sesama Admin.');
+            }
+            if (in_array($request->role, ['admin', 'owner'])) {
+                return back()->with('error', 'Admin hanya dapat mengelola role Mechanic dan Customer.');
+            }
         }
 
         $request->validate([
@@ -81,9 +98,21 @@ class UserManagementController extends Controller
      */
     public function updateStatus(Request $request, User $user): RedirectResponse
     {
-        // Guard: cannot suspend self
-        if ($user->id === auth()->id()) {
+        $currentUser = auth()->user();
+
+        // Guard 1: Cannot suspend self
+        if ($user->id === $currentUser->id) {
             return back()->with('error', 'Kamu tidak bisa mengubah status dirimu sendiri.');
+        }
+
+        // Guard 2: Owner account is untouchable
+        if ($user->role === 'owner') {
+            return back()->with('error', 'Akun Owner tidak dapat ditangguhkan atau di-kick oleh siapapun.');
+        }
+
+        // Guard 3: Admin cannot suspend/kick another admin
+        if ($currentUser->role === 'admin' && $user->role === 'admin') {
+            return back()->with('error', 'Admin tidak memiliki hak akses untuk menangguhkan atau me-kick sesama Admin.');
         }
 
         $request->validate([
@@ -96,13 +125,25 @@ class UserManagementController extends Controller
     }
 
     /**
-     * Delete / Kick a user account (cannot delete self).
+     * Delete / Kick a user account.
      */
     public function destroy(User $user): RedirectResponse
     {
-        // Guard: cannot delete self
-        if ($user->id === auth()->id()) {
+        $currentUser = auth()->user();
+
+        // Guard 1: Cannot delete self
+        if ($user->id === $currentUser->id) {
             return back()->with('error', 'Kamu tidak bisa menghapus akun dirimu sendiri.');
+        }
+
+        // Guard 2: Owner account is untouchable
+        if ($user->role === 'owner') {
+            return back()->with('error', 'Akun Owner tidak dapat dihapus oleh siapapun.');
+        }
+
+        // Guard 3: Admin cannot delete another admin
+        if ($currentUser->role === 'admin' && $user->role === 'admin') {
+            return back()->with('error', 'Admin tidak memiliki hak akses untuk menghapus sesama Admin.');
         }
 
         $user->delete();

@@ -153,111 +153,136 @@ const UserManagement = ({ users = { data: [] }, filters = {} }) => {
                   </td>
                 </tr>
               ) : (
-                userList.map((userItem) => (
-                  <tr key={userItem.id} className="hover:bg-slate-50 transition-colors">
-                    
-                    {/* User Info */}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center space-x-3">
-                        <img
-                          src={userItem.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
-                          alt={userItem.name}
-                          className="h-9 w-9 rounded-full object-cover border border-slate-200 shrink-0"
-                        />
-                        <div>
-                          <div className="font-bold text-slate-900 flex items-center space-x-1.5">
-                            <span>{userItem.name}</span>
-                            {userItem.is_self && (
-                              <span className="rounded bg-slate-900 text-white px-1.5 py-0.2 text-[9px] font-bold">Saya</span>
-                            )}
+                userList.map((userItem) => {
+                  const isSelf = userItem.is_self;
+                  const isTargetOwner = userItem.role === 'owner';
+                  const isTargetAdmin = userItem.role === 'admin';
+                  const isCurrentAdmin = currentUser?.role === 'admin';
+                  const isCurrentOwner = currentUser?.role === 'owner';
+
+                  // Hierarchy Guard:
+                  // 1. Cannot manage self
+                  // 2. Cannot manage Owner (Owner is untouchable)
+                  // 3. Admin cannot manage another Admin
+                  const canManageUser = !isSelf && !isTargetOwner && !(isCurrentAdmin && isTargetAdmin);
+
+                  return (
+                    <tr key={userItem.id} className="hover:bg-slate-50 transition-colors">
+                      
+                      {/* User Info */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center space-x-3">
+                          <img
+                            src={userItem.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
+                            alt={userItem.name}
+                            className="h-9 w-9 rounded-full object-cover border border-slate-200 shrink-0"
+                          />
+                          <div>
+                            <div className="font-bold text-slate-900 flex items-center space-x-1.5">
+                              <span>{userItem.name}</span>
+                              {userItem.is_self && (
+                                <span className="rounded bg-slate-900 text-white px-1.5 py-0.2 text-[9px] font-bold">Saya</span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-slate-500">{userItem.email}</p>
                           </div>
-                          <p className="text-[11px] text-slate-500">{userItem.email}</p>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* Contact */}
-                    <td className="px-4 py-3 text-slate-600 font-medium">
-                      {userItem.phone_number || '—'}
-                    </td>
+                      {/* Contact */}
+                      <td className="px-4 py-3 text-slate-600 font-medium">
+                        {userItem.phone_number || '—'}
+                      </td>
 
-                    {/* Role selector */}
-                    <td className="px-4 py-3 text-center">
-                      {userItem.is_self ? (
-                        <span className={`inline-block rounded px-2.5 py-1 text-[11px] font-bold border ${ROLE_BADGES[userItem.role]}`}>
-                          {ROLE_LABELS[userItem.role] ?? userItem.role}
-                        </span>
-                      ) : (
-                        <select
-                          value={userItem.role}
-                          disabled={updatingId === userItem.id}
-                          onChange={(e) => handleRoleChange(userItem.id, e.target.value)}
-                          className={`rounded-lg border px-2.5 py-1 text-xs font-bold focus:outline-none cursor-pointer ${ROLE_BADGES[userItem.role]}`}
-                        >
-                          <option value="customer">Customer (Pelanggan)</option>
-                          <option value="mechanic">Mechanic (Mekanik)</option>
-                          <option value="admin">Admin / Kasir</option>
-                          <option value="owner">Owner (Pemilik)</option>
-                        </select>
-                      )}
-                    </td>
-
-                    {/* Status selector */}
-                    <td className="px-4 py-3 text-center">
-                      {userItem.is_self ? (
-                        <span className={`inline-block rounded px-2.5 py-1 text-[11px] font-bold border ${STATUS_BADGES[userItem.status]}`}>
-                          {STATUS_LABELS[userItem.status] ?? userItem.status}
-                        </span>
-                      ) : (
-                        <select
-                          value={userItem.status}
-                          disabled={updatingId === userItem.id}
-                          onChange={(e) => handleStatusChange(userItem.id, e.target.value)}
-                          className={`rounded-lg border px-2.5 py-1 text-xs font-bold focus:outline-none cursor-pointer ${STATUS_BADGES[userItem.status]}`}
-                        >
-                          <option value="active">Aktif</option>
-                          <option value="inactive">Non-Aktif</option>
-                          <option value="suspended">Ditangguhkan (Kick)</option>
-                        </select>
-                      )}
-                    </td>
-
-                    {/* Owner Action Buttons */}
-                    <td className="px-4 py-3 text-center">
-                      {userItem.is_self ? (
-                        <span className="text-[10px] text-slate-400 font-semibold">— Akun Sendiri —</span>
-                      ) : (
-                        <div className="flex items-center justify-center space-x-1.5">
-                          {/* Kick / Suspend Button */}
-                          <button
-                            onClick={() => handleStatusChange(userItem.id, userItem.status === 'suspended' ? 'active' : 'suspended')}
+                      {/* Role selector */}
+                      <td className="px-4 py-3 text-center">
+                        {!canManageUser ? (
+                          <span className={`inline-block rounded px-2.5 py-1 text-[11px] font-bold border ${ROLE_BADGES[userItem.role]}`}>
+                            {ROLE_LABELS[userItem.role] ?? userItem.role}
+                          </span>
+                        ) : (
+                          <select
+                            value={userItem.role}
                             disabled={updatingId === userItem.id}
-                            className={`rounded-lg px-2 py-1 text-[10px] font-bold border transition-colors flex items-center space-x-1 ${
-                              userItem.status === 'suspended'
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                                : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
-                            }`}
-                            title={userItem.status === 'suspended' ? 'Aktifkan Kembali' : 'Kick / Tangguhkan Akun Ini'}
+                            onChange={(e) => handleRoleChange(userItem.id, e.target.value)}
+                            className={`rounded-lg border px-2.5 py-1 text-xs font-bold focus:outline-none cursor-pointer ${ROLE_BADGES[userItem.role]}`}
                           >
-                            <UserMinus className="h-3 w-3" />
-                            <span>{userItem.status === 'suspended' ? 'Un-Kick' : 'Kick / Suspend'}</span>
-                          </button>
+                            <option value="customer">Customer (Pelanggan)</option>
+                            <option value="mechanic">Mechanic (Mekanik)</option>
+                            {isCurrentOwner && (
+                              <>
+                                <option value="admin">Admin / Kasir</option>
+                                <option value="owner">Owner (Pemilik)</option>
+                              </>
+                            )}
+                          </select>
+                        )}
+                      </td>
 
-                          {/* Delete Account Button */}
-                          <button
-                            onClick={() => setDeleteModalUser(userItem)}
+                      {/* Status selector */}
+                      <td className="px-4 py-3 text-center">
+                        {!canManageUser ? (
+                          <span className={`inline-block rounded px-2.5 py-1 text-[11px] font-bold border ${STATUS_BADGES[userItem.status]}`}>
+                            {STATUS_LABELS[userItem.status] ?? userItem.status}
+                          </span>
+                        ) : (
+                          <select
+                            value={userItem.status}
                             disabled={updatingId === userItem.id}
-                            className="rounded-lg bg-rose-50 border border-rose-200 px-2 py-1 text-[10px] font-bold text-rose-700 hover:bg-rose-100 transition-colors flex items-center space-x-1"
-                            title="Hapus Akun Permanen"
+                            onChange={(e) => handleStatusChange(userItem.id, e.target.value)}
+                            className={`rounded-lg border px-2.5 py-1 text-xs font-bold focus:outline-none cursor-pointer ${STATUS_BADGES[userItem.status]}`}
                           >
-                            <Trash2 className="h-3 w-3 text-rose-600" />
-                            <span>Hapus</span>
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))
+                            <option value="active">Aktif</option>
+                            <option value="inactive">Non-Aktif</option>
+                            <option value="suspended">Ditangguhkan (Kick)</option>
+                          </select>
+                        )}
+                      </td>
+
+                      {/* Action Column */}
+                      <td className="px-4 py-3 text-center">
+                        {!canManageUser ? (
+                          <span className="text-[10px] font-bold">
+                            {isSelf ? (
+                              <span className="text-slate-400">— Akun Sendiri —</span>
+                            ) : isTargetOwner ? (
+                              <span className="rounded bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5">👑 Owner (Kasta Tertinggi)</span>
+                            ) : (
+                              <span className="text-slate-400">— Sesama Admin —</span>
+                            )}
+                          </span>
+                        ) : (
+                          <div className="flex items-center justify-center space-x-1.5">
+                            {/* Kick / Suspend Button */}
+                            <button
+                              onClick={() => handleStatusChange(userItem.id, userItem.status === 'suspended' ? 'active' : 'suspended')}
+                              disabled={updatingId === userItem.id}
+                              className={`rounded-lg px-2 py-1 text-[10px] font-bold border transition-colors flex items-center space-x-1 ${
+                                userItem.status === 'suspended'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                                  : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
+                              }`}
+                              title={userItem.status === 'suspended' ? 'Aktifkan Kembali' : 'Kick / Tangguhkan Akun Ini'}
+                            >
+                              <UserMinus className="h-3 w-3" />
+                              <span>{userItem.status === 'suspended' ? 'Un-Kick' : 'Kick / Suspend'}</span>
+                            </button>
+
+                            <button
+                              onClick={() => setDeleteModalUser(userItem)}
+                              disabled={updatingId === userItem.id}
+                              className="rounded-lg bg-rose-50 border border-rose-200 px-2 py-1 text-[10px] font-bold text-rose-700 hover:bg-rose-100 transition-colors flex items-center space-x-1"
+                              title="Hapus Akun Permanen"
+                            >
+                              <Trash2 className="h-3 w-3 text-rose-600" />
+                              <span>Hapus</span>
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
