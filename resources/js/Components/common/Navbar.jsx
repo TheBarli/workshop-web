@@ -4,16 +4,10 @@ import {
   Wrench,
   User,
   LogOut,
-  Calendar,
-  Package,
-  FileText,
-  Shield,
   Menu,
   X,
   ChevronDown,
   LayoutDashboard,
-  Car,
-  Receipt,
 } from 'lucide-react';
 
 const Navbar = () => {
