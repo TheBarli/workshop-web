@@ -1,7 +1,5 @@
-import { usePage } from '@inertiajs/react';
-import AdminLayout from '@/Layouts/AdminLayout';
+import { usePage, Head } from '@inertiajs/react';
 import CustomerLayout from '@/Layouts/CustomerLayout';
-import { Head } from '@inertiajs/react';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
@@ -104,11 +102,4 @@ export default function Edit({ mustVerifyEmail, status }) {
     return content;
 }
 
-Edit.layout = (page) => {
-    const user = page.props?.auth?.user;
-    const isAdminSide = ['admin', 'mechanic', 'owner'].includes(user?.role);
-    if (isAdminSide) {
-        return <AdminLayout children={page} />;
-    }
-    return <CustomerLayout children={page} />;
-};
+Edit.layout = (page) => <CustomerLayout children={page} />;

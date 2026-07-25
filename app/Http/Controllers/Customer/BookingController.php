@@ -21,19 +21,20 @@ class BookingController extends Controller
     {
         $userId = auth()->id();
 
-        $recentBookings = Booking::where('customer_id',$userId)
+        $recentBookings = Booking::where('customer_id', $userId)
             ->with(['vehicle', 'items.service'])
             ->latest()
             ->take(5)
             ->get();
 
-        $vehiclesCount = Vehicle::where('user_id',$userId)->count();
-        $pendingBookingsCount = Booking::where('customer_id',$userId)->where('status', 'pending')->count();
+        $vehicles = Vehicle::where('user_id', $userId)->latest()->get();
+        $pendingBookingsCount = Booking::where('customer_id', $userId)->where('status', 'pending')->count();
 
         return Inertia::render('customer/Dashboard', [
             'recentBookings' => $recentBookings,
+            'vehicles'       => $vehicles,
             'stats' => [
-                'totalVehicles' => $vehiclesCount,
+                'totalVehicles'   => $vehicles->count(),
                 'pendingBookings' => $pendingBookingsCount,
             ],
         ]);

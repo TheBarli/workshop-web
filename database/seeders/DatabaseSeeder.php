@@ -11,7 +11,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,    // 1. Users (customer, mechanic, admin, owner)
             ServiceSeeder::class, // 2. Services & Spareparts master data
-            VehicleSeeder::class, // 3. Vehicles + sample bookings (depends on users & services)
+            MonotaroSeeder::class,// 3. Monotaro Spareparts catalog import
+            VehicleSeeder::class, // 4. Vehicles + sample bookings (depends on users & services)
         ]);
     }
 }

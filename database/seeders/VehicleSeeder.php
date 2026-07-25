@@ -44,6 +44,22 @@ class VehicleSeeder extends Seeder
             ]
         );
 
+        $owner = User::where('email', 'owner@stelle.id')->first();
+
+        // Vehicle for owner
+        if ($owner) {
+            Vehicle::firstOrCreate(
+                ['license_plate' => 'B9999OWN'],
+                [
+                    'user_id' => $owner->id,
+                    'brand'   => 'Mitsubishi',
+                    'model'   => 'Pajero Sport Dakar',
+                    'year'    => 2023,
+                    'color'   => 'Hitam Metalik',
+                ]
+            );
+        }
+
         // Vehicle for customer 2
         if ($customer2) {
             Vehicle::firstOrCreate(

@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
-import { Wrench, Mail, Lock, LogIn, AlertCircle, Sparkles } from 'lucide-react';
+import { Wrench, Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
 import GuestLayout from '@/Layouts/GuestLayout';
 
 import PasswordInput from '@/Components/PasswordInput';
 
 const LoginPage = () => {
 
-  const [email, setEmail] = useState('budi@stelle.id');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -25,11 +25,6 @@ const LoginPage = () => {
     });
   };
 
-  const handleQuickDemo = (demoEmail, demoRole) => {
-    setEmail(demoEmail);
-    setPassword('password123');
-  };
-
   return (
     <div className="flex min-h-[85vh] items-center justify-center px-4 py-12">
       <div className="w-full max-w-md space-y-8 rounded-3xl border border-slate-200 bg-white p-8 shadow-xl">
@@ -43,44 +38,6 @@ const LoginPage = () => {
           <p className="text-xs text-slate-500">
             Akses portal pelanggan, booking servis online, atau dashboard operasional.
           </p>
-        </div>
-
-        {/* Quick Demo Switcher Buttons */}
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
-          <div className="flex items-center space-x-1 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-            <Sparkles className="h-3.5 w-3.5 text-[#eb6905]" />
-            <span>Klik Akun Demo Instan (Pengujian UI):</span>
-          </div>
-          <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-            <button
-              type="button"
-              onClick={() => handleQuickDemo('budi@stelle.id', 'customer')}
-              className="rounded-lg bg-white p-1.5 font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 border border-slate-200 text-left truncate"
-            >
-              👤 Customer (Budi)
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickDemo('agus.mechanic@stelle.id', 'mechanic')}
-              className="rounded-lg bg-white p-1.5 font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-800 border border-slate-200 text-left truncate"
-            >
-              🛠️ Mekanik (Agus)
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickDemo('siti.admin@stelle.id', 'admin')}
-              className="rounded-lg bg-white p-1.5 font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-800 border border-slate-200 text-left truncate"
-            >
-              💳 Admin (Siti)
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickDemo('owner@stelle.id', 'owner')}
-              className="rounded-lg bg-white p-1.5 font-medium text-slate-700 hover:bg-purple-50 hover:text-purple-800 border border-slate-200 text-left truncate"
-            >
-              📈 Owner (Hendra)
-            </button>
-          </div>
         </div>
 
         {error && (
