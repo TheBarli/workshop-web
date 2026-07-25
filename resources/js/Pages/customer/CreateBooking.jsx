@@ -23,7 +23,7 @@ const TIME_SLOTS = [
   { time: '16:00', label: '16:00 WIB (Sore)' },
 ];
 
-const CreateBooking = ({ vehicles = [], services = [] }) => {
+const CreateBooking = ({ vehicles = [], services = [], spareparts = [] }) => {
   const { auth } = usePage().props;
   const user = auth?.user;
 
@@ -50,10 +50,24 @@ const CreateBooking = ({ vehicles = [], services = [] }) => {
     form.setData('scheduled_at', `${newDate} ${newTime}:00`);
   };
 
+  const handleTabChange = (type) => {
+    setBookingType(type);
+    const targetItems = type === 'service' ? services : spareparts;
+    if (targetItems.length > 0) {
+      const hasTargetSelected = targetItems.some((item) => form.data.service_ids.includes(item.id));
+      if (!hasTargetSelected) {
+        form.setData('service_ids', [targetItems[0].id]);
+      }
+    }
+  };
+
+  const currentItems = bookingType === 'service' ? services : spareparts;
+  const allItems = [...services, ...spareparts];
+
   const selectedVehicle  = vehicles.find((v) => v.id === Number(form.data.vehicle_id));
-  const selectedServices = services.filter((s) => form.data.service_ids.includes(s.id));
+  const selectedServices = allItems.filter((s) => form.data.service_ids.includes(s.id));
   const totalPrice       = selectedServices.reduce((acc, s) => acc + Number(s.price), 0);
-  const totalEstimatedMinutes = selectedServices.reduce((acc, s) => acc + (Number(s.estimated_minutes) || 30), 0);
+  const totalEstimatedMinutes = selectedServices.reduce((acc, s) => acc + (Number(s.estimated_minutes) || 0), 0);
 
   const toggleService = (id) => {
     const current = [...form.data.service_ids];
@@ -84,7 +98,7 @@ const CreateBooking = ({ vehicles = [], services = [] }) => {
         <div className="grid grid-cols-2 gap-3 p-1.5 rounded-2xl bg-slate-100 border border-slate-200 text-xs font-bold">
           <button
             type="button"
-            onClick={() => setBookingType('service')}
+            onClick={() => handleTabChange('service')}
             className={`flex items-center justify-center space-x-2 py-2.5 rounded-xl transition-all ${
               bookingType === 'service'
                 ? 'bg-slate-900 text-white shadow-md'
@@ -96,7 +110,7 @@ const CreateBooking = ({ vehicles = [], services = [] }) => {
           </button>
           <button
             type="button"
-            onClick={() => setBookingType('sparepart')}
+            onClick={() => handleTabChange('sparepart')}
             className={`flex items-center justify-center space-x-2 py-2.5 rounded-xl transition-all ${
               bookingType === 'sparepart'
                 ? 'bg-slate-900 text-white shadow-md'
@@ -264,12 +278,12 @@ const CreateBooking = ({ vehicles = [], services = [] }) => {
                 Pilih {bookingType === 'service' ? 'Paket Layanan Servis' : 'Suku Cadang (Sparepart)'} (Bisa Lebih Dari Satu) *
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {services.map((service) => {
-                  const isChecked = form.data.service_ids.includes(service.id);
+                {currentItems.map((item) => {
+                  const isChecked = form.data.service_ids.includes(item.id);
                   return (
                     <div
-                      key={service.id}
-                      onClick={() => toggleService(service.id)}
+                      key={item.id}
+                      onClick={() => toggleService(item.id)}
                       className={`cursor-pointer rounded-2xl border p-4 transition-all flex items-start space-x-3 ${
                         isChecked
                           ? 'border-slate-900 bg-slate-900 text-white shadow-md'
@@ -277,20 +291,20 @@ const CreateBooking = ({ vehicles = [], services = [] }) => {
                       }`}
                     >
                       <input type="checkbox" checked={isChecked} readOnly className="mt-1 rounded accent-[#eb6905]" />
-                      <div className="space-y-1">
+                      <div className="space-y-1 flex-1">
                         <div className="flex items-center justify-between">
-                          <p className="text-xs font-bold">{service.name}</p>
+                          <p className="text-xs font-bold">{item.name}</p>
                           <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isChecked ? 'bg-slate-800 text-amber-400' : 'bg-slate-200 text-slate-700'}`}>
-                            ⏱️ {service.estimated_minutes || 30} Menit
+                            {Number(item.estimated_minutes) > 0 ? `⏱️ ${item.estimated_minutes} Menit` : '📦 Ready Stock'}
                           </span>
                         </div>
-                        {service.description && (
+                        {item.description && (
                           <p className={`text-[11px] leading-relaxed ${isChecked ? 'text-slate-300' : 'text-slate-500'}`}>
-                            {service.description}
+                            {item.description}
                           </p>
                         )}
                         <p className={`text-xs font-extrabold pt-1 ${isChecked ? 'text-[#eb6905]' : 'text-slate-900'}`}>
-                          Rp {Number(service.price).toLocaleString('id-ID')}
+                          Rp {Number(item.price).toLocaleString('id-ID')}
                         </p>
                       </div>
                     </div>
@@ -345,19 +359,21 @@ const CreateBooking = ({ vehicles = [], services = [] }) => {
                 <ul className="space-y-1.5 font-medium text-slate-800">
                   {selectedServices.map((s) => (
                     <li key={s.id} className="flex justify-between items-center">
-                      <span>• {s.name} ({s.estimated_minutes || 30} Menit)</span>
+                      <span>• {s.name} {Number(s.estimated_minutes) > 0 ? `(${s.estimated_minutes} Menit)` : ''}</span>
                       <span className="font-bold">Rp {Number(s.price).toLocaleString('id-ID')}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="border-t border-slate-200 pt-3 flex items-center justify-between">
-                <span className="text-slate-500">Total Estimasi Durasi Pengerjaan:</span>
-                <span className="font-bold text-slate-900 bg-slate-200 px-2 py-0.5 rounded">
-                  ⏱️ {totalEstimatedMinutes} Menit
-                </span>
-              </div>
+              {totalEstimatedMinutes > 0 && (
+                <div className="border-t border-slate-200 pt-3 flex items-center justify-between">
+                  <span className="text-slate-500">Total Estimasi Durasi Pengerjaan:</span>
+                  <span className="font-bold text-slate-900 bg-slate-200 px-2 py-0.5 rounded">
+                    ⏱️ {totalEstimatedMinutes} Menit
+                  </span>
+                </div>
+              )}
 
               {form.data.complaint_notes && (
                 <div className="border-t border-slate-200 pt-3">

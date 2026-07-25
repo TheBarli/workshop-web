@@ -48,8 +48,9 @@ class BookingController extends Controller
         $userId = auth()->id();
 
         return Inertia::render('customer/CreateBooking', [
-            'vehicles' => Vehicle::where('user_id', $userId)->get(),
-            'services' => Service::where('category', 'service')->get(),
+            'vehicles'   => Vehicle::where('user_id', $userId)->get(),
+            'services'   => Service::where('category', 'service')->get(),
+            'spareparts' => Service::where('category', 'sparepart')->get(),
         ]);
     }
 
