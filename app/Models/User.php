@@ -48,7 +48,7 @@ class User extends Authenticatable
 
     public function activeRole(): string
     {
-        return session('user_role') ?? $this->role;
+        return $this->role;
     }
 
     public function isAdmin(): bool

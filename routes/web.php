@@ -20,8 +20,12 @@ use Inertia\Inertia;
 |--------------------------------------------------------------------------
 */
 Route::get('/', fn () => Inertia::render('public/LandingPage'))->name('landing');
-Route::get('/services', fn () => Inertia::render('public/ServicesCatalog'))->name('services');
-Route::get('/spareparts', fn () => Inertia::render('public/SparepartsCatalog'))->name('spareparts');
+Route::get('/services', fn () => Inertia::render('public/ServicesCatalog', [
+    'services' => \App\Models\Service::where('category', 'service')->get(),
+]))->name('services');
+Route::get('/spareparts', fn () => Inertia::render('public/SparepartsCatalog', [
+    'spareparts' => \App\Models\Service::where('category', 'sparepart')->get(),
+]))->name('spareparts');
 
 // Guest Auth Routes
 Route::middleware('guest')->group(function () {
@@ -48,12 +52,6 @@ Route::middleware(['auth'])->group(function () {
         }
         return redirect()->route('admin.dashboard');
     })->name('dashboard');
-
-    Route::post('/switch-role', function (Request $request) {
-        $request->validate(['role' => 'required|string']);
-        session(['user_role' => $request->role]);
-        return back();
-    })->name('switch-role');
 
     // Profile — accessible by all authenticated roles
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

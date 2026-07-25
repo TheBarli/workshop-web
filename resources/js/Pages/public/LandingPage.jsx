@@ -51,7 +51,6 @@ const LandingPage = () => {
               className="lg:col-span-7 space-y-6"
             >
               <div className="inline-flex items-center space-x-2 rounded-full border border-[#eb6905]/40 bg-[#eb6905]/10 px-4 py-1.5 text-xs font-semibold text-[#eb6905] backdrop-blur-md">
-                <Sparkles className="h-4 w-4" />
                 <span>Next-Gen Workshop Management System</span>
               </div>
 

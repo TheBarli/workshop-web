@@ -1,31 +1,84 @@
 import React, { useState } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { Package, Search, CheckCircle2, AlertTriangle, ArrowRight, Wrench } from 'lucide-react';
 import { INITIAL_SPAREPARTS } from '../../services/mockData';
 import GuestLayout from '@/Layouts/GuestLayout';
 
-const SPAREPART_IMAGES = {
-  'SP-001': 'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=500', // Oli Mesin
-  'SP-002': 'https://images.unsplash.com/photo-1558442074-3c19857bc1dc?w=500', // Kampas Rem
-  'SP-003': 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=500', // Busi Iridium
-  'SP-004': 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=500', // Filter Oli
-  'SP-005': 'https://images.unsplash.com/photo-1578844251758-2f71da64c96f?w=500', // Akumulator / Aki
-  'SP-006': 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=500', // Ban Mobil
+// High-resolution, reliable Unsplash images mapped by keyword
+const CATEGORY_IMAGES = {
+  oli: 'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=600&q=80',
+  oil: 'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=600&q=80',
+  ban: 'https://images.unsplash.com/photo-1578844251758-2f71da64c96f?auto=format&fit=crop&w=600&q=80',
+  tires: 'https://images.unsplash.com/photo-1578844251758-2f71da64c96f?auto=format&fit=crop&w=600&q=80',
+  aki: 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=600&q=80',
+  battery: 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=600&q=80',
+  busi: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?auto=format&fit=crop&w=600&q=80',
+  spark: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?auto=format&fit=crop&w=600&q=80',
+  rem: 'https://images.unsplash.com/photo-1558442074-3c19857bc1dc?auto=format&fit=crop&w=600&q=80',
+  brake: 'https://images.unsplash.com/photo-1558442074-3c19857bc1dc?auto=format&fit=crop&w=600&q=80',
+  perkakas: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80',
+  lemari: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80',
+  tang: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80',
+  kompresor: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=600&q=80',
+  cat: 'https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=600&q=80',
+  spray: 'https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=600&q=80',
+  dempul: 'https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=600&q=80',
+  coolant: 'https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=600&q=80',
+  default: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=600&q=80',
 };
 
-const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=500';
+// Fallback SVG data URL if image request fails or is offline
+const FALLBACK_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'><rect width='600' height='400' fill='%23f1f5f9'/><path d='M250 160 L350 160 L330 220 L270 220 Z' stroke='%23091426' stroke-width='4' fill='none'/><circle cx='300' cy='190' r='35' stroke='%23eb6905' stroke-width='6' fill='none'/><text x='50%' y='75%' font-family='sans-serif' font-size='16' font-weight='bold' fill='%23475569' text-anchor='middle'>Bengkel Stelle Original Part</text></svg>";
+
+const getSparepartImage = (partCode, name = '') => {
+  const lowerName = name.toLowerCase();
+  for (const [key, url] of Object.entries(CATEGORY_IMAGES)) {
+    if (key !== 'default' && lowerName.includes(key)) {
+      return url;
+    }
+  }
+  return CATEGORY_IMAGES.default;
+};
 
 const SparepartsCatalog = () => {
+  const page = usePage();
+  const { spareparts } = page.props;
+
+  const partsList = (spareparts && spareparts.length > 0)
+    ? spareparts.map((item) => ({
+        id: item.id,
+        part_code: item.code,
+        name: item.name,
+        category: 'Sparepart',
+        stock: item.stock,
+        min_stock: 5,
+        selling_price: parseFloat(item.price),
+        description: item.description,
+      }))
+    : INITIAL_SPAREPARTS;
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
 
-  const categories = ['All', 'Pelumas', 'Filter', 'Pengereman', 'Pengapian'];
+  const categories = ['All', 'Oli & Pelumas', 'Perkakas & Tools', 'Ban & Aki', 'Cat & Perawatan'];
 
-  const filteredParts = INITIAL_SPAREPARTS.filter((part) => {
-    const matchesCat = selectedCategory === 'All' || part.category === selectedCategory;
+  const filteredParts = partsList.filter((part) => {
+    const lowerName = part.name.toLowerCase();
+    let matchesCat = true;
+    if (selectedCategory === 'Oli & Pelumas') {
+      matchesCat = lowerName.includes('oli') || lowerName.includes('oil') || lowerName.includes('grease') || lowerName.includes('fluid') || lowerName.includes('coolant');
+    } else if (selectedCategory === 'Perkakas & Tools') {
+      matchesCat = lowerName.includes('perkakas') || lowerName.includes('kompresor') || lowerName.includes('jack') || lowerName.includes('dongkrak') || lowerName.includes('pliers') || lowerName.includes('tang');
+    } else if (selectedCategory === 'Ban & Aki') {
+      matchesCat = lowerName.includes('ban') || lowerName.includes('tire') || lowerName.includes('aki') || lowerName.includes('battery');
+    } else if (selectedCategory === 'Cat & Perawatan') {
+      matchesCat = lowerName.includes('cat') || lowerName.includes('paint') || lowerName.includes('putty') || lowerName.includes('dempul') || lowerName.includes('sponge') || lowerName.includes('cleaner') || lowerName.includes('wax');
+    }
+
     const matchesSearch =
       part.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       part.part_code.toLowerCase().includes(searchTerm.toLowerCase());
+
     return matchesCat && matchesSearch;
   });
 
@@ -90,7 +143,7 @@ const SparepartsCatalog = () => {
       {/* Spareparts Grid with Product Images */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredParts.map((part) => {
-          const imgUrl = SPAREPART_IMAGES[part.part_code] || DEFAULT_IMAGE;
+          const imgUrl = getSparepartImage(part.part_code, part.name);
           return (
             <div
               key={part.id}
@@ -101,6 +154,10 @@ const SparepartsCatalog = () => {
                 <img
                   src={imgUrl}
                   alt={part.name}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = FALLBACK_SVG;
+                  }}
                   className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                 />
                 <div className="absolute top-3 left-3 flex items-center space-x-2">

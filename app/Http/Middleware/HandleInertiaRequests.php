@@ -38,7 +38,7 @@ class HandleInertiaRequests extends Middleware
                     'id'           => $user->id,
                     'name'         => $user->name,
                     'email'        => $user->email,
-                    'role'         => session('user_role') ?? $user->role,
+                    'role'         => $user->role,
                     'phone_number' => $user->phone_number,
                     'avatar'       => $user->avatar
                         ? (str_starts_with($user->avatar, 'http') ? $user->avatar : asset('storage/' . $user->avatar))
