@@ -65,7 +65,7 @@ Route::middleware(['auth'])->group(function () {
 | CUSTOMER ROUTES
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:customer,admin,owner'])
+Route::middleware(['auth', 'role:customer,admin,mechanic,owner'])
     ->prefix('customer')
     ->name('customer.')
     ->group(function () {

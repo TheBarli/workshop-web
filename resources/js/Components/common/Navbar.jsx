@@ -80,11 +80,11 @@ const Navbar = () => {
 
               {['admin', 'owner', 'mechanic'].includes(user?.role) && (
                 <Link
-                  href={user?.role === 'mechanic' ? '/admin/schedule' : user?.role === 'owner' ? '/admin/reports' : '/admin/dashboard'}
+                  href="/admin/dashboard"
                   className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 transition-colors flex items-center space-x-1.5"
                 >
                   <LayoutDashboard className="h-4 w-4 text-[#eb6905]" />
-                  <span>Admin Workbench</span>
+                  <span>Operational Panel</span>
                 </Link>
               )}
             </>
@@ -249,11 +249,11 @@ const Navbar = () => {
 
                 {['admin', 'owner', 'mechanic'].includes(user?.role) && (
                   <Link
-                    href={user?.role === 'mechanic' ? '/admin/schedule' : user?.role === 'owner' ? '/admin/reports' : '/admin/dashboard'}
+                    href="/admin/dashboard"
                     onClick={() => setMobileMenuOpen(false)}
                     className="rounded-xl bg-slate-900 px-3.5 py-2.5 text-sm font-bold text-white flex items-center justify-between mt-2"
                   >
-                    <span>Admin Workbench</span>
+                    <span>Operational Panel</span>
                     <LayoutDashboard className="h-4 w-4 text-[#eb6905]" />
                   </Link>
                 )}
