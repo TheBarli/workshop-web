@@ -14,8 +14,14 @@ class UpdateBookingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status'      => ['required', 'in:pending,confirmed,in_progress,completed,cancelled'],
-            'mechanic_id' => ['nullable', 'exists:users,id'],
+            'status'             => ['nullable', 'in:pending,confirmed,in_progress,completed,cancelled'],
+            'mechanic_id'        => ['nullable', 'exists:users,id'],
+            'scheduled_at'       => ['nullable', 'date'],
+            'complaint_notes'    => ['nullable', 'string', 'max:1000'],
+            'mechanic_diagnosis' => ['nullable', 'string', 'max:1000'],
+            'items'              => ['nullable', 'array'],
+            'items.*.service_id' => ['required_with:items', 'exists:services,id'],
+            'items.*.quantity'   => ['nullable', 'integer', 'min:1'],
         ];
     }
 }

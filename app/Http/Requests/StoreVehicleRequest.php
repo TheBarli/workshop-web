@@ -14,6 +14,7 @@ class StoreVehicleRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'user_id'       => ['nullable', 'exists:users,id'],
             'license_plate' => ['required', 'string', 'max:15', 'unique:vehicles,license_plate'],
             'brand'         => ['required', 'string', 'max:50'],
             'model'         => ['required', 'string', 'max:50'],
