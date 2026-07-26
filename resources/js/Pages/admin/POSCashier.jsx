@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useForm, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
+import InvoiceModal from '@/Components/pos/InvoiceModal';
 import confetti from 'canvas-confetti';
 import {
   ShoppingCart,
@@ -19,6 +20,7 @@ const POSCashier = ({ unpaidBookings = [], servicesAndParts = [] }) => {
   const [discountAmount, setDiscountAmount] = useState(0);
   const [paidAmountInput, setPaidAmountInput] = useState('');
   const [invoiceDone, setInvoiceDone] = useState(false);
+  const [showPrintModal, setShowPrintModal] = useState(false);
 
   const form = useForm({
     booking_id:     selectedBooking?.id ?? '',
@@ -38,6 +40,7 @@ const POSCashier = ({ unpaidBookings = [], servicesAndParts = [] }) => {
   const handleSelectBooking = (booking) => {
     setSelectedBooking(booking);
     setInvoiceDone(false);
+    setShowPrintModal(false);
     form.setData('booking_id', booking.id);
     setPaidAmountInput('');
     setDiscountAmount(0);
@@ -58,6 +61,7 @@ const POSCashier = ({ unpaidBookings = [], servicesAndParts = [] }) => {
       onSuccess: () => {
         confetti({ particleCount: 70, spread: 50, origin: { y: 0.7 } });
         setInvoiceDone(true);
+        setShowPrintModal(true);
       },
     });
   };
@@ -94,12 +98,22 @@ const POSCashier = ({ unpaidBookings = [], servicesAndParts = [] }) => {
               <span className="font-extrabold text-emerald-600">Rp {grandTotal.toLocaleString('id-ID')}</span>
             </div>
           </div>
-          <button
-            onClick={() => { setInvoiceDone(false); setSelectedBooking(null); }}
-            className="rounded-xl bg-[#eb6905] px-5 py-2.5 text-xs font-bold text-white hover:bg-[#d95d00]"
-          >
-            Proses Transaksi Berikutnya
-          </button>
+
+          <div className="flex flex-wrap justify-center gap-3 pt-2">
+            <button
+              onClick={() => setShowPrintModal(true)}
+              className="flex items-center space-x-2 rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-slate-800 transition-colors"
+            >
+              <Printer className="h-4 w-4 text-[#eb6905]" />
+              <span>Cetak Struk / Invoice</span>
+            </button>
+            <button
+              onClick={() => { setInvoiceDone(false); setSelectedBooking(null); setShowPrintModal(false); }}
+              className="rounded-xl bg-[#eb6905] px-5 py-2.5 text-xs font-bold text-white hover:bg-[#d95d00] transition-colors"
+            >
+              Proses Transaksi Berikutnya
+            </button>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -253,8 +267,22 @@ const POSCashier = ({ unpaidBookings = [], servicesAndParts = [] }) => {
               </button>
             </div>
           </div>
-        </div>
-      )}
+      {/* Invoice Modal for receipt view and printing */}
+      <InvoiceModal
+        isOpen={showPrintModal}
+        onClose={() => setShowPrintModal(false)}
+        data={{
+          ...selectedBooking,
+          cashier_name: auth?.user?.name,
+          subtotal,
+          discountAmount,
+          taxAmount,
+          grandTotal,
+          payment_method: form.data.payment_method,
+          paidAmountInput,
+          changeAmount,
+        }}
+      />
     </div>
   );
 };

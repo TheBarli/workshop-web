@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
+import InvoiceModal from '@/Components/pos/InvoiceModal';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -11,7 +12,7 @@ import {
   BarChart,
   Bar,
 } from 'recharts';
-import { BarChart3, TrendingUp, FileSpreadsheet, DollarSign } from 'lucide-react';
+import { BarChart3, TrendingUp, FileSpreadsheet, DollarSign, Printer } from 'lucide-react';
 
 const ReportsAnalytics = ({
   transactions   = [],
@@ -19,6 +20,8 @@ const ReportsAnalytics = ({
   monthlyChart   = [],
   serviceChart   = [],
 }) => {
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [showPrintModal, setShowPrintModal] = useState(false);
 
   const handleExportExcel = () => {
     alert('Laporan omzet transaksi kasir terunduh dalam format Excel (.xlsx) [FR-006]');
@@ -136,9 +139,19 @@ const ReportsAnalytics = ({
                       {t.booking?.vehicle?.license_plate} — {t.booking?.customer?.name}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="font-extrabold text-emerald-600">Rp {Number(t.total_amount).toLocaleString('id-ID')}</p>
-                    <p className="text-[10px] text-slate-400 font-mono">{t.paid_at ? t.paid_at.substring(0, 10) : '—'}</p>
+                  <div className="flex items-center space-x-3">
+                    <div className="text-right">
+                      <p className="font-extrabold text-emerald-600">Rp {Number(t.total_amount).toLocaleString('id-ID')}</p>
+                      <p className="text-[10px] text-slate-400 font-mono">{t.paid_at ? t.paid_at.substring(0, 10) : '—'}</p>
+                    </div>
+                    <button
+                      onClick={() => { setSelectedTransaction(t); setShowPrintModal(true); }}
+                      className="rounded-lg bg-slate-900 border border-slate-700 px-2.5 py-1.5 text-[10px] font-bold text-white hover:bg-slate-800 transition-colors flex items-center space-x-1 shrink-0"
+                      title="Cetak Struk Transaksi Ini"
+                    >
+                      <Printer className="h-3 w-3 text-[#eb6905]" />
+                      <span>Struk</span>
+                    </button>
                   </div>
                 </div>
               ))}
@@ -146,6 +159,13 @@ const ReportsAnalytics = ({
           )}
         </div>
       </div>
+
+      {/* Invoice Modal for past transactions printing */}
+      <InvoiceModal
+        isOpen={showPrintModal}
+        onClose={() => setShowPrintModal(false)}
+        data={selectedTransaction}
+      />
 
     </div>
   );
