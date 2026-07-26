@@ -11,6 +11,10 @@ class CheckRole
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
         if (! $request->user()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                abort(401, 'Unauthenticated.');
+            }
+
             return redirect()->route('login');
         }
 
