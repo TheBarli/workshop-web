@@ -20,6 +20,23 @@ class DashboardController extends Controller
      */
     public function index(): Response
     {
+        $user = auth()->user();
+
+        if ($user->isMechanic()) {
+            return Inertia::render('admin/AdminDashboard', [
+                'stats' => [
+                    'myAssignedJobs'  => Booking::where('mechanic_id', $user->id)->count(),
+                    'myActiveJobs'    => Booking::where('mechanic_id', $user->id)->whereIn('status', ['confirmed', 'in_progress'])->count(),
+                    'myCompletedJobs' => Booking::where('mechanic_id', $user->id)->where('status', 'completed')->count(),
+                ],
+                'recentBookings' => Booking::with(['customer', 'vehicle', 'mechanic', 'items.service'])
+                    ->where('mechanic_id', $user->id)
+                    ->latest()
+                    ->take(6)
+                    ->get(),
+            ]);
+        }
+
         return Inertia::render('admin/AdminDashboard', [
             'stats' => [
                 'totalBookings'   => Booking::count(),
@@ -57,9 +74,14 @@ class DashboardController extends Controller
      */
     public function workOrders(): Response
     {
-        $workOrders = Booking::with(['customer', 'vehicle', 'mechanic', 'items.service'])
-            ->latest()
-            ->get();
+        $user = auth()->user();
+        $query = Booking::with(['customer', 'vehicle', 'mechanic', 'items.service']);
+
+        if ($user->isMechanic()) {
+            $query->where('mechanic_id', $user->id);
+        }
+
+        $workOrders = $query->latest()->get();
 
         return Inertia::render('admin/WorkOrders', [
             'workOrders' => $workOrders,

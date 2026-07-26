@@ -116,21 +116,23 @@ const AdminLayout = ({ children }) => {
             }`}
           >
             <LayoutDashboard className="h-4 w-4 shrink-0" />
-            {(!collapsed || mobileOpen) && <span>Monitoring Dashboard</span>}
+            {(!collapsed || mobileOpen) && <span>{user?.role === 'mechanic' ? 'Dashboard Mekanik' : 'Monitoring Dashboard'}</span>}
           </Link>
 
-          <Link
-            href="/admin/schedule"
-            onClick={() => setMobileOpen(false)}
-            className={`flex items-center space-x-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
-              isActive('/admin/schedule')
-                ? 'bg-[#eb6905] text-white shadow-lg shadow-[#eb6905]/20'
-                : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
-            }`}
-          >
-            <CalendarCheck className="h-4 w-4 shrink-0" />
-            {(!collapsed || mobileOpen) && <span>Slot &amp; Queue Management</span>}
-          </Link>
+          {user?.role !== 'mechanic' && (
+            <Link
+              href="/admin/schedule"
+              onClick={() => setMobileOpen(false)}
+              className={`flex items-center space-x-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
+                isActive('/admin/schedule')
+                  ? 'bg-[#eb6905] text-white shadow-lg shadow-[#eb6905]/20'
+                  : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
+              }`}
+            >
+              <CalendarCheck className="h-4 w-4 shrink-0" />
+              {(!collapsed || mobileOpen) && <span>Slot &amp; Queue Management</span>}
+            </Link>
+          )}
 
           <Link
             href="/admin/work-orders"
@@ -145,18 +147,20 @@ const AdminLayout = ({ children }) => {
             {(!collapsed || mobileOpen) && <span>Work Orders (Mekanik)</span>}
           </Link>
 
-          <Link
-            href="/admin/pos"
-            onClick={() => setMobileOpen(false)}
-            className={`flex items-center space-x-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
-              isActive('/admin/pos')
-                ? 'bg-[#eb6905] text-white shadow-lg shadow-[#eb6905]/20'
-                : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
-            }`}
-          >
-            <ShoppingCart className="h-4 w-4 shrink-0 text-amber-400" />
-            {(!collapsed || mobileOpen) && <span>POS Kasir &amp; Thermal Print</span>}
-          </Link>
+          {user?.role !== 'mechanic' && (
+            <Link
+              href="/admin/pos"
+              onClick={() => setMobileOpen(false)}
+              className={`flex items-center space-x-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
+                isActive('/admin/pos')
+                  ? 'bg-[#eb6905] text-white shadow-lg shadow-[#eb6905]/20'
+                  : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
+              }`}
+            >
+              <ShoppingCart className="h-4 w-4 shrink-0 text-amber-400" />
+              {(!collapsed || mobileOpen) && <span>POS Kasir &amp; Thermal Print</span>}
+            </Link>
+          )}
 
           <Link
             href="/admin/inventory"
@@ -171,31 +175,35 @@ const AdminLayout = ({ children }) => {
             {(!collapsed || mobileOpen) && <span>Inventory &amp; Stock Control</span>}
           </Link>
 
-          <Link
-            href="/owner/users"
-            onClick={() => setMobileOpen(false)}
-            className={`flex items-center space-x-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
-              isActive('/owner/users') || isActive('/admin/users')
-                ? 'bg-[#eb6905] text-white shadow-lg shadow-[#eb6905]/20'
-                : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
-            }`}
-          >
-            <Users className="h-4 w-4 shrink-0 text-purple-400" />
-            {(!collapsed || mobileOpen) && <span>Manajemen Role &amp; Pengguna</span>}
-          </Link>
+          {user?.role !== 'mechanic' && (
+            <Link
+              href="/owner/users"
+              onClick={() => setMobileOpen(false)}
+              className={`flex items-center space-x-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
+                isActive('/owner/users') || isActive('/admin/users')
+                  ? 'bg-[#eb6905] text-white shadow-lg shadow-[#eb6905]/20'
+                  : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
+              }`}
+            >
+              <Users className="h-4 w-4 shrink-0 text-purple-400" />
+              {(!collapsed || mobileOpen) && <span>Manajemen Role &amp; Pengguna</span>}
+            </Link>
+          )}
 
-          <Link
-            href="/admin/reports"
-            onClick={() => setMobileOpen(false)}
-            className={`flex items-center space-x-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
-              isActive('/admin/reports')
-                ? 'bg-[#eb6905] text-white shadow-lg shadow-[#eb6905]/20'
-                : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
-            }`}
-          >
-            <BarChart3 className="h-4 w-4 shrink-0 text-emerald-400" />
-            {(!collapsed || mobileOpen) && <span>Laporan Keuangan &amp; Analytics</span>}
-          </Link>
+          {user?.role !== 'mechanic' && (
+            <Link
+              href="/admin/reports"
+              onClick={() => setMobileOpen(false)}
+              className={`flex items-center space-x-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
+                isActive('/admin/reports')
+                  ? 'bg-[#eb6905] text-white shadow-lg shadow-[#eb6905]/20'
+                  : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
+              }`}
+            >
+              <BarChart3 className="h-4 w-4 shrink-0 text-emerald-400" />
+              {(!collapsed || mobileOpen) && <span>Laporan Keuangan &amp; Analytics</span>}
+            </Link>
+          )}
         </nav>
 
         {/* Sidebar Footer Controls */}

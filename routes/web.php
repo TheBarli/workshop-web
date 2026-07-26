@@ -101,22 +101,36 @@ Route::middleware(['auth', 'role:admin,mechanic,owner'])
     ->name('admin.')
     ->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-        Route::get('/schedule', [AdminDashboardController::class, 'queue'])->name('schedule');
         Route::get('/work-orders', [AdminDashboardController::class, 'workOrders'])->name('work-orders');
-        Route::get('/pos', [AdminDashboardController::class, 'pos'])->name('pos');
         Route::get('/inventory', [AdminDashboardController::class, 'inventory'])->name('inventory');
+
+        // Booking Status Management (Mechanic can update assigned work order status)
+        Route::patch('/bookings/{booking}/status', [AdminBookingController::class, 'updateStatus'])->name('bookings.status');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN / OWNER RESTRICTED ROUTES (BLOCK MECHANIC ROLE)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:admin,owner'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        // Queue / Antrean Management
+        Route::get('/schedule', [AdminDashboardController::class, 'queue'])->name('schedule');
+
+        // POS Kasir & Payments
+        Route::get('/pos', [AdminDashboardController::class, 'pos'])->name('pos');
+        Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
+
+        // Laporan Keuangan & Analytics
         Route::get('/reports', [AdminDashboardController::class, 'reports'])->name('reports');
 
-        // Admin Booking Status Management
-        Route::patch('/bookings/{booking}/status', [AdminBookingController::class, 'updateStatus'])->name('bookings.status');
-
-        // Admin Service / Sparepart Inventory Management
+        // Service & Sparepart Management
         Route::post('/services', [AdminServiceController::class, 'store'])->name('services.store');
         Route::patch('/services/{service}', [AdminServiceController::class, 'update'])->name('services.update');
         Route::delete('/services/{service}', [AdminServiceController::class, 'destroy'])->name('services.destroy');
-
-        // POS Checkout — create Transaction
-        Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
     });
 
 /*

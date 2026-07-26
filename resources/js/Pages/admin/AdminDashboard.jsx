@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import {
   CalendarCheck,
@@ -8,6 +8,8 @@ import {
   AlertTriangle,
   Clock,
   ShoppingCart,
+  Wrench,
+  CheckCircle2,
 } from 'lucide-react';
 
 const STATUS_BADGE = {
@@ -19,11 +21,18 @@ const STATUS_BADGE = {
 };
 
 const AdminDashboard = ({ stats = {}, recentBookings = [] }) => {
+  const { auth } = usePage().props;
+  const user = auth?.user;
+  const isMechanic = user?.role === 'mechanic';
+
   const {
-    totalBookings  = 0,
-    activeQueue    = 0,
-    totalCustomers = 0,
-    totalRevenue   = 0,
+    totalBookings   = 0,
+    activeQueue     = 0,
+    totalCustomers  = 0,
+    totalRevenue    = 0,
+    myAssignedJobs  = 0,
+    myActiveJobs    = 0,
+    myCompletedJobs = 0,
   } = stats;
 
   return (
@@ -32,92 +41,157 @@ const AdminDashboard = ({ stats = {}, recentBookings = [] }) => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-[#091426]">Monitoring Operasional Bengkel Real-Time</h1>
+          <h1 className="text-2xl font-extrabold text-[#091426]">
+            {isMechanic ? 'Dashboard Mekanik Specialist' : 'Monitoring Operasional Bengkel Real-Time'}
+          </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Ringkasan antrean booking, status mekanik, dan transaksi kasir hari ini.
+            {isMechanic
+              ? 'Ringkasan unit pengerjaan dan status work order yang ditugaskan kepada Anda.'
+              : 'Ringkasan antrean booking, status mekanik, dan transaksi kasir hari ini.'}
           </p>
         </div>
-        <Link
-          href="/admin/pos"
-          className="flex items-center space-x-2 rounded-xl bg-[#eb6905] px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-[#d95d00]"
-        >
-          <ShoppingCart className="h-4 w-4" />
-          <span>Terminal POS Kasir</span>
-        </Link>
+        {isMechanic ? (
+          <Link
+            href="/admin/work-orders"
+            className="flex items-center space-x-2 rounded-xl bg-[#eb6905] px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-[#d95d00]"
+          >
+            <Wrench className="h-4 w-4" />
+            <span>Lihat Work Orders Saya</span>
+          </Link>
+        ) : (
+          <Link
+            href="/admin/pos"
+            className="flex items-center space-x-2 rounded-xl bg-[#eb6905] px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-[#d95d00]"
+          >
+            <ShoppingCart className="h-4 w-4" />
+            <span>Terminal POS Kasir</span>
+          </Link>
+        )}
       </div>
 
       {/* KPI CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">Antrean Aktif</span>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-              <CalendarCheck className="h-5 w-5" />
+      {isMechanic ? (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500">Total Tugas Saya</span>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                <Wrench className="h-5 w-5" />
+              </div>
+            </div>
+            <div>
+              <p className="text-2xl font-extrabold text-slate-900">{myAssignedJobs} Unit</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">Total booking ditugaskan</p>
             </div>
           </div>
-          <div>
-            <p className="text-2xl font-extrabold text-slate-900">{activeQueue} Unit</p>
-            <p className="text-[11px] text-slate-500 mt-0.5">Pending &amp; in-progress</p>
-          </div>
-        </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">Total Booking</span>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-              <ClipboardList className="h-5 w-5" />
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500">Pekerjaan Aktif</span>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                <Clock className="h-5 w-5" />
+              </div>
+            </div>
+            <div>
+              <p className="text-2xl font-extrabold text-slate-900">{myActiveJobs} Unit</p>
+              <p className="text-[11px] text-blue-600 font-semibold mt-0.5">Dikonfirmasi &amp; sedang dikerjakan</p>
             </div>
           </div>
-          <div>
-            <p className="text-2xl font-extrabold text-slate-900">{totalBookings}</p>
-            <p className="text-[11px] text-indigo-600 font-semibold mt-0.5">Semua waktu</p>
-          </div>
-        </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">Total Pelanggan</span>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-              <AlertTriangle className="h-5 w-5" />
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500">Selesai Dikerjakan</span>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+            </div>
+            <div>
+              <p className="text-2xl font-extrabold text-emerald-600">{myCompletedJobs} Unit</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">Siap penyerahan / kasir</p>
             </div>
           </div>
-          <div>
-            <p className="text-2xl font-extrabold text-slate-900">{totalCustomers}</p>
-            <p className="text-[11px] text-slate-500 mt-0.5">Terdaftar di sistem</p>
-          </div>
         </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500">Antrean Aktif</span>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                <CalendarCheck className="h-5 w-5" />
+              </div>
+            </div>
+            <div>
+              <p className="text-2xl font-extrabold text-slate-900">{activeQueue} Unit</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">Pending &amp; in-progress</p>
+            </div>
+          </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">Total Omzet (Paid)</span>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-              <TrendingUp className="h-5 w-5" />
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500">Total Booking</span>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                <ClipboardList className="h-5 w-5" />
+              </div>
+            </div>
+            <div>
+              <p className="text-2xl font-extrabold text-slate-900">{totalBookings}</p>
+              <p className="text-[11px] text-indigo-600 font-semibold mt-0.5">Semua waktu</p>
             </div>
           </div>
-          <div>
-            <p className="text-xl font-extrabold text-emerald-600">
-              Rp {Number(totalRevenue).toLocaleString('id-ID')}
-            </p>
-            <p className="text-[11px] text-slate-500 mt-0.5">Transaksi lunas</p>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500">Total Pelanggan</span>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+            </div>
+            <div>
+              <p className="text-2xl font-extrabold text-slate-900">{totalCustomers}</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">Terdaftar di sistem</p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500">Total Omzet (Paid)</span>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                <TrendingUp className="h-5 w-5" />
+              </div>
+            </div>
+            <div>
+              <p className="text-xl font-extrabold text-emerald-600">
+                Rp {Number(totalRevenue).toLocaleString('id-ID')}
+              </p>
+              <p className="text-[11px] text-slate-500 mt-0.5">Transaksi lunas</p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* RECENT BOOKINGS TABLE */}
       <div className="rounded-2xl border border-slate-200 bg-white shadow-xs overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
             <Clock className="h-4 w-4 text-[#eb6905]" />
-            <span>Booking Terbaru</span>
+            <span>{isMechanic ? 'Tugas Work Order Terbaru Saya' : 'Booking Terbaru'}</span>
           </h3>
-          <Link href="/admin/schedule" className="text-xs font-bold text-[#eb6905] hover:underline">
-            Kelola Antrean →
-          </Link>
+          {isMechanic ? (
+            <Link href="/admin/work-orders" className="text-xs font-bold text-[#eb6905] hover:underline">
+              Lihat Work Orders →
+            </Link>
+          ) : (
+            <Link href="/admin/schedule" className="text-xs font-bold text-[#eb6905] hover:underline">
+              Kelola Antrean →
+            </Link>
+          )}
         </div>
 
         <div className="divide-y divide-slate-100">
           {recentBookings.length === 0 ? (
-            <p className="text-xs text-slate-500 text-center py-8">Belum ada booking.</p>
+            <p className="text-xs text-slate-500 text-center py-8">
+              {isMechanic ? 'Belum ada tugas work order yang diberikan.' : 'Belum ada booking.'}
+            </p>
           ) : (
             recentBookings.map((b) => (
               <div key={b.id} className="flex items-center justify-between px-6 py-3 hover:bg-slate-50 text-xs transition-colors">

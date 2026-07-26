@@ -210,10 +210,7 @@ const UserManagement = ({ users = { data: [] }, filters = {} }) => {
                             <option value="customer">Customer (Pelanggan)</option>
                             <option value="mechanic">Mechanic (Mekanik)</option>
                             {isCurrentOwner && (
-                              <>
-                                <option value="admin">Admin / Kasir</option>
-                                <option value="owner">Owner (Pemilik)</option>
-                              </>
+                              <option value="admin">Admin / Kasir</option>
                             )}
                           </select>
                         )}

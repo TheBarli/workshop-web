@@ -84,8 +84,13 @@ class UserManagementController extends Controller
             }
         }
 
+        // Guard 4: Cannot assign Owner role to any user
+        if ($request->role === 'owner') {
+            return back()->with('error', 'Role Owner tidak dapat diberikan kepada siapapun.');
+        }
+
         $request->validate([
-            'role' => ['required', Rule::in(['customer', 'mechanic', 'admin', 'owner'])],
+            'role' => ['required', Rule::in(['customer', 'mechanic', 'admin'])],
         ]);
 
         $user->update(['role' => $request->role]);
