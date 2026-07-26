@@ -267,6 +267,9 @@ const POSCashier = ({ unpaidBookings = [], servicesAndParts = [] }) => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
       {/* Invoice Modal for receipt view and printing */}
       <InvoiceModal
         isOpen={showPrintModal}
