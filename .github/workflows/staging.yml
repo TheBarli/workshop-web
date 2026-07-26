@@ -22,7 +22,8 @@ jobs:
 
             cd /var/www/workshop-staging
 
-            git pull origin staging
+            git fetch origin staging
+            git reset --hard origin/staging
             composer install --no-dev --optimize-autoloader --no-interaction
 
             npm install
